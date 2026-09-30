@@ -2,10 +2,8 @@ import './main.css';
 
 const $ = id => document.getElementById(id);
 
-const FIELDS = ['tonnage', 'tPack', 'tCarry', 'tStack', 'tariff'];
-const STORE_KEY = 'bryket-packing-v8';
-
-const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
+const FIELDS = ['tonnage', 'bagWeight', 'tPack', 'tCarry', 'tStack', 'tariff'];
+const STORE_KEY = 'bryket-packing-v9';
 
 const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
 const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
@@ -19,9 +17,10 @@ function fmtTime(sec){
 }
 
 function calc(){
-  const tonnage = num('tonnage');
-  const bags    = Math.round(tonnage * 1000 / BAG_WEIGHT);
-  const tariff  = num('tariff');
+  const tonnage   = num('tonnage');
+  const bagWeight = num('bagWeight');
+  const bags      = bagWeight > 0 ? Math.round(tonnage * 1000 / bagWeight) : 0;
+  const tariff    = num('tariff');
 
   const ops = [
     {name:'Фасування',  note:'набрати з купи, зав’язати', t:num('tPack')},
@@ -38,9 +37,9 @@ function calc(){
   const rate   = ops.reduce((s,o) => s + o.rate, 0);
   const cost   = bags * rate;
   const hours  = ops.reduce((s,o) => s + o.hours, 0);
-  const perTon = rate / (BAG_WEIGHT / 1000);
+  const perTon = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
 
-  return {tonnage, bags, tariff, ops, rate, cost, hours, perTon};
+  return {tonnage, bagWeight, bags, tariff, ops, rate, cost, hours, perTon};
 }
 
 function render(){
@@ -65,34 +64,39 @@ function render(){
   const rowHtml = o =>
     '<tr>' +
       '<td class="td pr-2 text-left">' +
-        '<div class="leading-tight">' + o.name + '</div>' +
-        '<div class="text-[11px] text-slate-400">' + o.note + '</div>' +
+        '<div class="font-semibold leading-tight">' + o.name + '</div>' +
+        '<div class="text-xs font-medium text-slate-500">' + o.note + '</div>' +
       '</td>' +
-      '<td class="td text-right text-slate-400">' + fmtTime(o.t) + '</td>' +
-      '<td class="td text-right font-semibold">' + nf(o.rate, 2) + '</td>' +
-      '<td class="td text-right text-slate-400">' + nf(o.cost, 0) + '</td>' +
+      '<td class="td hidden text-right font-semibold text-slate-600 sm:table-cell">' + fmtTime(o.t) + '</td>' +
+      '<td class="td text-right font-bold">' + nf(o.rate, 2) + '</td>' +
+      '<td class="td text-right font-semibold text-slate-600">' + nf(o.cost, 0) + '</td>' +
     '</tr>';
 
   $('opsBody').innerHTML = r.ops.map(rowHtml).join('') +
     '<tr class="row-total">' +
       '<td class="text-left">Разом</td>' +
-      '<td class="text-right text-slate-400">' + fmtTime(r.ops.reduce((s,o) => s + o.t, 0)) + '</td>' +
+      '<td class="hidden text-right text-slate-600 sm:table-cell">' + fmtTime(r.ops.reduce((s,o) => s + o.t, 0)) + '</td>' +
       '<td class="text-right">' + nf(r.rate, 2) + '</td>' +
       '<td class="text-right">' + nf(r.cost, 0) + '</td>' +
     '</tr>';
 
-  const u = ' <small class="text-xs font-normal text-slate-400">грн</small>';
+  const u = ' <small class="text-sm font-semibold text-slate-600">грн</small>';
   $('sumCost').innerHTML  = nf(r.cost, 0) + u;
   $('sumHours').innerHTML = nf(r.hours, 1) +
-    ' <small class="text-xs font-normal text-slate-400">год</small>';
+    ' <small class="text-sm font-semibold text-slate-600">год</small>';
   $('sumTon').innerHTML   = nf(r.perTon, 0) + u;
   $('sumBag').innerHTML   = nf(r.rate, 2) + u;
 
   const flags = [];
   if (r.tariff > 0 && r.tariff < 300){
-    flags.push('<div class="mb-3 rounded-lg bg-amber-50 px-3 py-2.5 text-[13px] leading-snug text-amber-800">' +
-      '<b class="font-semibold">Тариф нижчий за ринковий.</b> У Києві 2026 сервіси беруть ' +
+    flags.push('<div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm font-medium leading-snug text-amber-900">' +
+      '<b class="font-bold">Тариф нижчий за ринковий.</b> У Києві 2026 сервіси беруть ' +
       '350–450 грн/год, тож за ' + nf(r.tariff, 0) + ' грн/год бригаду знайти важко.</div>');
+  }
+  if (r.bagWeight > 35){
+    flags.push('<div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm font-medium leading-snug text-amber-900">' +
+      '<b class="font-bold">Мішок понад 35 кг.</b> Постійно піднімати таку вагу одній людині ' +
+      'небезпечно — потрібен другий робітник або механізація.</div>');
   }
   $('flagBox').innerHTML = flags.join('');
 }

@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-accent: #2e7d4f;
+  /* затемнено з #2e7d4f: контраст на accent-soft був 4,44, став 5,7 (WCAG AA) */
+  --color-accent: #256b42;
   --color-accent-soft: #e8f3ec;
   --color-accent-ink: #1f5a39;
 
@@ -10,32 +11,60 @@
                "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
+@layer base {
+  /* крупнее корневой размер — тянет за собой весь rem-масштаб */
+  html {
+    font-size: 16px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 17px;
+    }
+  }
+  body {
+    @apply text-slate-900;
+  }
+}
+
+@layer base {
+  /* прибираємо стрілки-спінери: з'їдають місце в полі й тут не потрібні */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
 @layer components {
   .card {
     @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5;
   }
   .card-title {
-    @apply mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+    @apply mb-3 text-xs font-bold tracking-wider text-slate-700 uppercase;
   }
   .num-input,
   .num-input-lg {
-    @apply rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-right
-           text-sm tabular-nums transition
-           focus:border-accent focus:ring-2 focus:ring-accent/25 focus:outline-none;
+    @apply rounded-lg border-2 border-slate-500 bg-white px-2 py-1.5 text-right
+           text-base font-semibold tabular-nums transition
+           focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none;
   }
   .num-input-lg {
     @apply w-full px-3 py-2;
   }
   .th {
-    @apply border-b border-slate-200 pb-2 pl-2 text-[10px] font-semibold
-           tracking-wide whitespace-nowrap text-slate-500 uppercase sm:pl-3;
+    @apply border-b-2 border-slate-400 pb-2 pl-2 text-xs font-bold
+           tracking-wide whitespace-nowrap text-slate-700 uppercase sm:pl-3;
   }
   .th:first-child {
     @apply pl-0;
   }
   .td {
-    @apply border-b border-dashed border-slate-200 py-2.5 pl-2 align-middle
-           text-[13px] tabular-nums sm:pl-3 sm:text-sm;
+    @apply border-b border-dashed border-slate-400 py-2.5 pl-2 align-middle
+           text-sm font-medium tabular-nums sm:pl-3 sm:text-base;
   }
   .td:first-child {
     @apply pl-0;
@@ -51,18 +80,18 @@
     @apply pl-0 whitespace-normal;
   }
   .row-total td {
-    @apply border-t-2 border-b-0 border-slate-800 pt-3 text-sm font-semibold
-           sm:text-[15px];
+    @apply border-t-2 border-b-0 border-slate-900 pt-3 text-base font-bold
+           sm:text-lg;
   }
   .stat {
-    @apply rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2.5
+    @apply rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5
            sm:px-3.5 sm:py-3;
   }
   .stat-k {
-    @apply text-[11px] leading-tight text-slate-500 sm:text-xs;
+    @apply text-xs leading-tight font-semibold text-slate-700 sm:text-sm;
   }
   .stat-v {
-    @apply text-lg font-semibold tracking-tight tabular-nums sm:text-xl;
+    @apply text-xl font-bold tracking-tight tabular-nums sm:text-2xl;
   }
   /* прибирає подвійну лінію перед підсумковим рядком */
   tbody tr:last-child td,

@@ -24,23 +24,25 @@
         <h2 class="card-title">Партія</h2>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="block">
-            <span class="mb-1 block text-xs text-slate-500">Маса брикету в купі</span>
+            <span class="mb-1 block text-sm font-semibold text-slate-700">Маса брикету в купі</span>
             <span class="flex items-center gap-2">
               <input id="tonnage" type="number" value="6" min="0.1" step="0.5"
                      class="num-input-lg">
-              <span class="shrink-0 text-xs text-slate-400">т</span>
+              <span class="shrink-0 text-sm font-semibold text-slate-600">т</span>
             </span>
           </label>
-          <div>
-            <span class="mb-1 block text-xs text-slate-500">Вага мішка</span>
-            <div class="flex items-center justify-end rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm tabular-nums text-slate-500">
-              30 кг
-            </div>
-          </div>
+          <label class="block">
+            <span class="mb-1 block text-sm font-semibold text-slate-700">Вага мішка</span>
+            <span class="flex items-center gap-2">
+              <input id="bagWeight" type="number" value="30" min="1" step="1"
+                     class="num-input-lg">
+              <span class="shrink-0 text-sm font-semibold text-slate-600">кг</span>
+            </span>
+          </label>
           <div class="sm:col-span-2">
             <div class="flex items-baseline justify-between gap-3 rounded-lg bg-accent-soft px-3.5 py-2.5">
-              <span class="text-[13px] text-accent-ink">Мішків у партії</span>
-              <strong id="bagsOut" class="text-lg font-semibold tabular-nums text-accent">—</strong>
+              <span class="text-sm font-bold text-accent-ink">Мішків у партії</span>
+              <strong id="bagsOut" class="text-2xl font-bold tabular-nums text-accent">—</strong>
             </div>
           </div>
         </div>
@@ -62,13 +64,13 @@
             <tr>
               <td class="td pr-2 text-left">
                 <div class="leading-tight">Фасування одного мішка</div>
-                <div class="text-[11px] text-slate-400">набрати з купи, зав'язати</div>
+                <div class="text-xs font-medium text-slate-500">набрати з купи, зав'язати</div>
               </td>
               <td class="td pl-2 text-right">
                 <span class="flex items-center justify-end gap-1">
                   <input id="tPack" type="number" value="300" min="1" step="5"
-                         class="num-input w-16 sm:w-20">
-                  <span class="text-[11px] text-slate-400">с</span>
+                         class="num-input w-14 sm:w-20">
+                  <span class="text-xs font-semibold text-slate-500">с</span>
                 </span>
               </td>
               <td id="bagsPack" class="td hidden text-right text-slate-400 sm:table-cell">—</td>
@@ -77,13 +79,13 @@
             <tr>
               <td class="td pr-2 text-left">
                 <div class="leading-tight">Переноска одного мішка</div>
-                <div class="text-[11px] text-slate-400">на 10 м, тільки туди</div>
+                <div class="text-xs font-medium text-slate-500">на 10 м, тільки туди</div>
               </td>
               <td class="td pl-2 text-right">
                 <span class="flex items-center justify-end gap-1">
                   <input id="tCarry" type="number" value="60" min="1" step="5"
-                         class="num-input w-16 sm:w-20">
-                  <span class="text-[11px] text-slate-400">с</span>
+                         class="num-input w-14 sm:w-20">
+                  <span class="text-xs font-semibold text-slate-500">с</span>
                 </span>
               </td>
               <td id="bagsCarry" class="td hidden text-right text-slate-400 sm:table-cell">—</td>
@@ -92,13 +94,13 @@
             <tr>
               <td class="td pr-2 text-left">
                 <div class="leading-tight">Укладання одного мішка</div>
-                <div class="text-[11px] text-slate-400">на піддони, до 1,5 м</div>
+                <div class="text-xs font-medium text-slate-500">на піддони, до 1,5 м</div>
               </td>
               <td class="td pl-2 text-right">
                 <span class="flex items-center justify-end gap-1">
                   <input id="tStack" type="number" value="10" min="1" step="1"
-                         class="num-input w-16 sm:w-20">
-                  <span class="text-[11px] text-slate-400">с</span>
+                         class="num-input w-14 sm:w-20">
+                  <span class="text-xs font-semibold text-slate-500">с</span>
                 </span>
               </td>
               <td id="bagsStack" class="td hidden text-right text-slate-400 sm:table-cell">—</td>
@@ -118,23 +120,23 @@
       <section class="card">
         <h2 class="card-title">Тариф</h2>
         <label class="block">
-          <span class="mb-1 block text-xs text-slate-500">Вартість години праці</span>
+          <span class="mb-1 block text-sm font-semibold text-slate-700">Вартість години праці</span>
           <span class="flex items-center gap-2">
             <input id="tariff" type="number" value="450" min="0" step="10"
                    class="num-input-lg">
-            <span class="shrink-0 text-xs text-slate-400">грн/год</span>
+            <span class="shrink-0 text-sm font-semibold text-slate-600">грн/год</span>
           </span>
         </label>
-        <p class="mt-1.5 text-[11px] text-slate-400">
+        <p class="mt-1.5 text-xs font-medium text-slate-600">
           Київ, 2026: бюджетний сервіс 350, стандартний 450, преміум 500+
         </p>
         <div class="mt-4 flex flex-wrap gap-2">
           <button id="btnPrint" type="button"
-                  class="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white transition hover:brightness-110">
+                  class="rounded-lg bg-accent px-4 py-2.5 text-base font-bold text-white transition hover:brightness-110">
             Друк / PDF
           </button>
           <button id="btnReset" type="button"
-                  class="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                  class="rounded-lg border-2 border-slate-500 bg-white px-4 py-2.5 text-base font-bold text-slate-800 transition hover:bg-slate-100">
             Скинути
           </button>
         </div>
@@ -152,7 +154,7 @@
           <thead>
             <tr>
               <th class="th text-left">Операція</th>
-              <th class="th text-right">Час</th>
+              <th class="th hidden text-right sm:table-cell">Час</th>
               <th class="th text-right">
                 <span class="sm:hidden">Грн/міш</span>
                 <span class="hidden sm:inline">Грн/мішок</span>
@@ -189,7 +191,7 @@
             <div class="stat-v" id="sumBag">—</div>
           </div>
         </div>
-        <p class="mt-4 text-xs leading-relaxed text-slate-500">
+        <p class="mt-4 text-sm leading-relaxed font-medium text-slate-600">
           Розцінка = час операції / 3600 × тариф. Норми часу беруться з таблиці вище.
           Стрейч-плівка, вартість брикету, мішків і піддонів у розрахунок не входять.
         </p>
