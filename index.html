@@ -148,19 +148,19 @@
           </thead>
           <tbody>
             <tr>
-              <td>Фасування<small>набрати з купи, зав'язати</small></td>
+              <td>Фасування одного мішка<small>набрати з купи, зав'язати</small></td>
               <td><div class="unit sm"><input type="number" id="tPack" value="360" min="1" step="5"><span>с</span></div></td>
               <td class="dim" id="bagsPack">—</td>
               <td id="totPack">—</td>
             </tr>
             <tr>
-              <td>Переноска<small>на 10 м, тільки туди</small></td>
-              <td><div class="unit sm"><input type="number" id="tCarry" value="60" min="1" step="1"><span>с</span></div></td>
+              <td>Переноска одного мішка<small>на 10 м, тільки туди</small></td>
+              <td><div class="unit sm"><input type="number" id="tCarry" value="120" min="1" step="5"><span>с</span></div></td>
               <td class="dim" id="bagsCarry">—</td>
               <td id="totCarry">—</td>
             </tr>
             <tr>
-              <td>Укладання<small>на піддони, до 1,5 м</small></td>
+              <td>Укладання одного мішка<small>на піддони, до 1,5 м</small></td>
               <td><div class="unit sm"><input type="number" id="tStack" value="60" min="1" step="1"><span>с</span></div></td>
               <td class="dim" id="bagsStack">—</td>
               <td id="totStack">—</td>
@@ -254,7 +254,7 @@
 
   const $ = id => document.getElementById(id);
   const FIELDS = ['tonnage','tPack','tCarry','tStack','spread','tariff'];
-  const STORE_KEY = 'bryket-packing-v4';
+  const STORE_KEY = 'bryket-packing-v5';
 
   const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
 
