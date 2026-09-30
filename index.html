@@ -31,12 +31,14 @@
               <span class="shrink-0 text-xs text-slate-400">т</span>
             </span>
           </label>
-          <div>
+          <label class="block">
             <span class="mb-1 block text-xs text-slate-500">Вага мішка</span>
-            <div class="flex items-center justify-end rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm tabular-nums text-slate-500">
-              30 кг
-            </div>
-          </div>
+            <span class="flex items-center gap-2">
+              <input id="bagWeight" type="number" value="30" min="1" step="1"
+                     class="num-input-lg">
+              <span class="shrink-0 text-xs text-slate-400">кг</span>
+            </span>
+          </label>
           <div class="sm:col-span-2">
             <div class="flex items-baseline justify-between gap-3 rounded-lg bg-accent-soft px-3.5 py-2.5">
               <span class="text-[13px] text-accent-ink">Мішків у партії</span>

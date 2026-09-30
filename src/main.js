@@ -2,10 +2,8 @@ import './main.css';
 
 const $ = id => document.getElementById(id);
 
-const FIELDS = ['tonnage', 'tPack', 'tCarry', 'tStack', 'tariff'];
-const STORE_KEY = 'bryket-packing-v8';
-
-const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
+const FIELDS = ['tonnage', 'bagWeight', 'tPack', 'tCarry', 'tStack', 'tariff'];
+const STORE_KEY = 'bryket-packing-v10';
 
 const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
 const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
@@ -19,9 +17,10 @@ function fmtTime(sec){
 }
 
 function calc(){
-  const tonnage = num('tonnage');
-  const bags    = Math.round(tonnage * 1000 / BAG_WEIGHT);
-  const tariff  = num('tariff');
+  const tonnage   = num('tonnage');
+  const bagWeight = num('bagWeight');
+  const bags      = bagWeight > 0 ? Math.round(tonnage * 1000 / bagWeight) : 0;
+  const tariff    = num('tariff');
 
   const ops = [
     {name:'Фасування',  note:'набрати з купи, зав’язати', t:num('tPack')},
@@ -38,9 +37,9 @@ function calc(){
   const rate   = ops.reduce((s,o) => s + o.rate, 0);
   const cost   = bags * rate;
   const hours  = ops.reduce((s,o) => s + o.hours, 0);
-  const perTon = rate / (BAG_WEIGHT / 1000);
+  const perTon = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
 
-  return {tonnage, bags, tariff, ops, rate, cost, hours, perTon};
+  return {tonnage, bagWeight, bags, tariff, ops, rate, cost, hours, perTon};
 }
 
 function render(){
@@ -93,6 +92,11 @@ function render(){
     flags.push('<div class="mb-3 rounded-lg bg-amber-50 px-3 py-2.5 text-[13px] leading-snug text-amber-800">' +
       '<b class="font-semibold">Тариф нижчий за ринковий.</b> У Києві 2026 сервіси беруть ' +
       '350–450 грн/год, тож за ' + nf(r.tariff, 0) + ' грн/год бригаду знайти важко.</div>');
+  }
+  if (r.bagWeight > 35){
+    flags.push('<div class="mb-3 rounded-lg bg-amber-50 px-3 py-2.5 text-[13px] leading-snug text-amber-800">' +
+      '<b class="font-semibold">Мішок понад 35 кг.</b> Постійно піднімати таку вагу одній людині ' +
+      'небезпечно — потрібен другий робітник або механізація.</div>');
   }
   $('flagBox').innerHTML = flags.join('');
 }
