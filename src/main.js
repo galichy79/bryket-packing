@@ -87,12 +87,16 @@ function render(){
     '</tr>';
 
   const u  = t => ' <small class="text-xs font-normal text-slate-400">' + t + '</small>';
-  $('sumCost').innerHTML     = nf(r.cost, 0) + u('грн');
-  $('sumManHours').innerHTML = nf(r.hours, 1) + u('люд.-год');
-  $('sumTermH').innerHTML    = nf(r.elapsed, 1) + u('год');
-  $('sumTermD').innerHTML    = nf(r.days, 1) + u('днів');
-  $('termNote').textContent  = 'зміна ' + nf(r.shift, r.shift % 1 ? 1 : 0) +
-                               ' год, ' + r.workers + ' ос.';
+
+  // тривалість роботи: загальні години поділені на (зміна × робітники)
+  const dec = v => nf(v, v % 1 ? 1 : 0);
+  $('durHours').innerHTML   = nf(r.hours, 1) + u('год');
+  $('durDivisor').innerHTML = dec(r.shift) + ' × ' + r.workers + ' = ' +
+                              nf(r.shift * r.workers, 1) + u('год');
+  $('durDays').innerHTML    = nf(r.days, 1) + u('днів');
+
+  $('sumCost').innerHTML  = nf(r.cost, 0) + u('грн');
+  $('sumTermH').innerHTML = nf(r.elapsed, 1) + u('год');
   $('sumTon').innerHTML      = nf(r.perTon, 0) + u('грн');
   $('sumBag').innerHTML      = nf(r.rate, 2) + u('грн');
 

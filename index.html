@@ -191,23 +191,33 @@
       <section class="card">
         <h2 class="card-title">Підсумок по партії</h2>
         <div id="flagBox"></div>
+
+        <div class="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-3">
+          <h3 class="card-title mb-2.5">Тривалість роботи</h3>
+          <div class="space-y-1.5">
+            <div class="flex items-baseline justify-between gap-3 text-[13px]">
+              <span class="text-slate-500">Загальна кількість годин</span>
+              <span class="font-semibold tabular-nums" id="durHours">—</span>
+            </div>
+            <div class="flex items-baseline justify-between gap-3 text-[13px]">
+              <span class="text-slate-500">Ділимо на: зміна × робітники</span>
+              <span class="font-semibold tabular-nums" id="durDivisor">—</span>
+            </div>
+            <div class="flex items-baseline justify-between gap-3 border-t-2 border-slate-300 pt-2">
+              <span class="text-sm font-semibold">Днів роботи</span>
+              <span class="text-xl font-bold tabular-nums text-accent" id="durDays">—</span>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
           <div class="stat border-accent/25 bg-accent-soft">
             <div class="stat-k text-accent-ink">Вартість робіт за партію</div>
             <div class="stat-v text-accent" id="sumCost">—</div>
           </div>
           <div class="stat">
-            <div class="stat-k">Людино-годин</div>
-            <div class="stat-v" id="sumManHours">—</div>
-          </div>
-          <div class="stat">
             <div class="stat-k">Термін виконання, год</div>
             <div class="stat-v" id="sumTermH">—</div>
-          </div>
-          <div class="stat border-accent/25 bg-accent-soft">
-            <div class="stat-k text-accent-ink">Термін виконання, днів</div>
-            <div class="stat-v text-accent" id="sumTermD">—</div>
-            <div class="mt-0.5 text-[11px] leading-tight text-slate-500" id="termNote"></div>
           </div>
           <div class="stat">
             <div class="stat-k">За одну тонну</div>
