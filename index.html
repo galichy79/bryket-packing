@@ -90,9 +90,9 @@
           <div class="field full">
             <label for="briketType">Тип брикету</label>
             <select id="briketType">
-              <option value="pinikay">Pini-Kay — 4-гранний з отвором</option>
-              <option value="nestro">Nestro — циліндр з отвором</option>
-              <option value="ruf">Ruf — цеглинка</option>
+              <option value="pinikay">Pini-Kay — 4-гранний з отвором, ~12 000 грн/т</option>
+              <option value="nestro">Nestro — циліндр з отвором, ~11 000 грн/т</option>
+              <option value="ruf">Ruf — цеглинка, ~7 000 грн/т</option>
               <option value="custom">Інший (задати щільність вручну)</option>
             </select>
           </div>
@@ -102,7 +102,7 @@
           </div>
           <div class="field">
             <label for="briketPrice">Ціна брикету</label>
-            <div class="unit"><input type="number" id="briketPrice" value="5000" min="0" step="50"><span>грн/т</span></div>
+            <div class="unit"><input type="number" id="briketPrice" value="12000" min="0" step="50"><span>грн/т</span></div>
           </div>
         </div>
       </div>
@@ -275,10 +275,11 @@
 
   const $ = id => document.getElementById(id);
 
+  // щільність кг/м³ і оптова ціна грн/т, Київ 2026
   const BRIKET = {
-    pinikay: 1250,
-    nestro:  1100,
-    ruf:     1000
+    pinikay: {density:1250, price:12000},
+    nestro:  {density:1100, price:11000},
+    ruf:     {density:1000, price:7000}
   };
 
   const PALLET = {
@@ -326,8 +327,9 @@
   /* ── регламентні значення залежно від типу ── */
   function applyBriket(){
     const t = $('briketType').value;
-    if (BRIKET[t] !== undefined){
-      $('density').value = BRIKET[t];
+    if (BRIKET[t]){
+      $('density').value     = BRIKET[t].density;
+      $('briketPrice').value = BRIKET[t].price;
     }
     $('density').readOnly = (t !== 'custom');
     $('density').style.opacity = $('density').readOnly ? .6 : 1;
