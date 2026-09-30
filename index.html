@@ -1,371 +1,204 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Калькулятор розцінок на фасування та складування брикету</title>
-<style>
-  :root{
-    --bg:#f4f6f4; --card:#fff; --ink:#1c2620; --muted:#6b7a72;
-    --line:#dde4df; --accent:#2e7d4f; --accent-soft:#e8f3ec;
-    --warn:#b26a00; --warn-soft:#fdf3e2;
-    --radius:10px;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    background:var(--bg); color:var(--ink);
-    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",sans-serif;
-    padding:24px 16px 64px;
-  }
-  .wrap{max-width:1120px;margin:0 auto}
-  header.top{margin-bottom:20px}
-  header.top h1{font-size:22px;margin:0;letter-spacing:-.2px}
-  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
-  @media (max-width:900px){.cols{grid-template-columns:1fr}}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px}
-  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 14px;font-weight:600}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:520px){.grid{grid-template-columns:1fr}}
-  .field{display:flex;flex-direction:column;gap:5px}
-  .field.full{grid-column:1/-1}
-  label{font-size:12.5px;color:var(--muted)}
-  .sublabel{font-size:11.5px;color:var(--muted);opacity:.85}
-  input{
-    font:inherit;color:inherit;background:#fbfdfb;
-    border:1px solid var(--line);border-radius:7px;padding:8px 10px;width:100%;
-  }
-  input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
-  input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
-  .fixed{
-    display:flex;align-items:center;justify-content:flex-end;
-    background:#f2f5f3;border:1px solid var(--line);border-radius:7px;
-    padding:8px 10px;font-variant-numeric:tabular-nums;color:var(--muted);
-  }
-  .unit.sm input{padding:6px 8px;font-size:13.5px}
-  .unit.sm span{font-size:11px}
-  .unit{display:flex;align-items:center;gap:8px}
-  .unit input{flex:1 1 auto;min-width:0}
-  .unit span{flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
-
-  .derived{
-    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
-    background:var(--accent-soft);border-radius:7px;padding:9px 12px;margin-top:2px;
-  }
-  .derived span:first-child{font-size:13px;color:var(--accent)}
-  .derived strong{font-size:17px;color:var(--accent);font-variant-numeric:tabular-nums}
-
-  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-  th{
-    font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);
-    font-weight:600;text-align:right;padding:0 0 8px;border-bottom:1px solid var(--line);
-  }
-  th:first-child{text-align:left}
-  td{padding:9px 0;border-bottom:1px dashed var(--line);text-align:right;font-size:14px}
-  td:first-child{text-align:left;line-height:1.35}
-  td:first-child small{display:block;font-size:11.5px;color:var(--muted)}
-  tr:last-child td{border-bottom:0}
-  tr.total td{border-top:2px solid var(--ink);border-bottom:0;padding-top:12px;font-weight:600;font-size:15px}
-  .hi{font-weight:600}
-  .dim{color:var(--muted)}
-  table.norms td{padding:7px 0;font-size:13.5px;white-space:nowrap}
-  table.norms td:first-child{white-space:normal}
-  table.norms td:nth-child(2){width:84px}
-  table.norms td:nth-child(3){width:54px}
-  table.norms td:nth-child(4){width:74px}
-  table.norms tr.total td{padding-top:11px;font-size:14px}
-
-  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
-  @media (max-width:460px){.summary{grid-template-columns:1fr}}
-  .stat{background:#fbfdfb;border:1px solid var(--line);border-radius:8px;padding:11px 13px}
-  .stat .k{font-size:12px;color:var(--muted);margin-bottom:3px}
-  .stat .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
-  .stat .v small{font-size:12px;font-weight:400;color:var(--muted)}
-  .stat.accent{background:var(--accent-soft);border-color:#cfe4d7}
-  .stat.accent .v{color:var(--accent)}
-
-  .flag{border-radius:7px;padding:10px 12px;font-size:13px;margin-bottom:12px;background:var(--accent-soft);color:var(--accent)}
-  .flag.warn{background:var(--warn-soft);color:var(--warn)}
-  .flag b{font-weight:600}
-
-  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-  button{
-    font:inherit;font-weight:600;cursor:pointer;border-radius:7px;padding:9px 14px;
-    border:1px solid var(--line);background:#fff;color:var(--ink);
-  }
-  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  button:hover{filter:brightness(.97)}
-  .hint{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.55}
-  .hint code{background:#eef2ef;padding:1px 5px;border-radius:4px;font-size:11.5px}
-
-  @media print{
-    body{background:#fff;padding:0;font-size:12px}
-    .noprint{display:none !important}
-    .card{break-inside:avoid;border-color:#bbb}
-    .cols{grid-template-columns:1fr}
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>Калькулятор розцінок на фасування та складування брикету</title>
 </head>
-<body>
-<div class="wrap">
+<body class="bg-slate-50 text-slate-800 antialiased">
+<div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-9">
 
-  <header class="top">
-    <h1>Калькулятор розцінок на фасування та складування брикету</h1>
+  <header class="mb-5 sm:mb-7">
+    <h1 class="text-lg leading-snug font-semibold tracking-tight text-slate-900 sm:text-2xl">
+      Калькулятор розцінок на фасування та складування брикету
+    </h1>
   </header>
 
-  <div class="cols">
+  <div class="grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-5">
 
     <!-- ─────────── ПАРАМЕТРИ ─────────── -->
-    <div class="noprint">
+    <div class="min-w-0 space-y-4 print:hidden">
 
-      <div class="card">
-        <h2>Партія</h2>
-        <div class="grid">
-          <div class="field">
-            <label for="tonnage">Маса брикету в купі</label>
-            <div class="unit"><input type="number" id="tonnage" value="6" min="0.1" step="0.5"><span>т</span></div>
+      <section class="card">
+        <h2 class="card-title">Партія</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-xs text-slate-500">Маса брикету в купі</span>
+            <span class="flex items-center gap-2">
+              <input id="tonnage" type="number" value="6" min="0.1" step="0.5"
+                     class="num-input-lg">
+              <span class="shrink-0 text-xs text-slate-400">т</span>
+            </span>
+          </label>
+          <div>
+            <span class="mb-1 block text-xs text-slate-500">Вага мішка</span>
+            <div class="flex items-center justify-end rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm tabular-nums text-slate-500">
+              30 кг
+            </div>
           </div>
-          <div class="field">
-            <label>Вага мішка</label>
-            <div class="fixed">30 кг</div>
-          </div>
-          <div class="field full">
-            <div class="derived"><span>Мішків у партії</span><strong id="bagsOut">200</strong></div>
+          <div class="sm:col-span-2">
+            <div class="flex items-baseline justify-between gap-3 rounded-lg bg-accent-soft px-3.5 py-2.5">
+              <span class="text-[13px] text-accent-ink">Мішків у партії</span>
+              <strong id="bagsOut" class="text-lg font-semibold tabular-nums text-accent">—</strong>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <h2>Норми часу</h2>
-        <table class="norms">
+      <section class="card">
+        <h2 class="card-title">Норми часу</h2>
+        <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
           <thead>
             <tr>
-              <th>Операція</th>
-              <th>На мішок</th>
-              <th>Мішків</th>
-              <th>Загалом</th>
+              <th class="th text-left">Операція</th>
+              <th class="th text-right">На мішок</th>
+              <th class="th hidden text-right sm:table-cell">Мішків</th>
+              <th class="th text-right">Загалом</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Фасування одного мішка<small>набрати з купи, зав'язати</small></td>
-              <td><div class="unit sm"><input type="number" id="tPack" value="360" min="1" step="5"><span>с</span></div></td>
-              <td class="dim" id="bagsPack">—</td>
-              <td id="totPack">—</td>
+              <td class="td pr-2 text-left">
+                <div class="leading-tight">Фасування одного мішка</div>
+                <div class="text-[11px] text-slate-400">набрати з купи, зав'язати</div>
+              </td>
+              <td class="td pl-2 text-right">
+                <span class="flex items-center justify-end gap-1">
+                  <input id="tPack" type="number" value="360" min="1" step="5"
+                         class="num-input w-16 sm:w-20">
+                  <span class="text-[11px] text-slate-400">с</span>
+                </span>
+              </td>
+              <td id="bagsPack" class="td hidden text-right text-slate-400 sm:table-cell">—</td>
+              <td id="totPack" class="td text-right font-medium">—</td>
             </tr>
             <tr>
-              <td>Переноска одного мішка<small>на 10 м, тільки туди</small></td>
-              <td><div class="unit sm"><input type="number" id="tCarry" value="120" min="1" step="5"><span>с</span></div></td>
-              <td class="dim" id="bagsCarry">—</td>
-              <td id="totCarry">—</td>
+              <td class="td pr-2 text-left">
+                <div class="leading-tight">Переноска одного мішка</div>
+                <div class="text-[11px] text-slate-400">на 10 м, тільки туди</div>
+              </td>
+              <td class="td pl-2 text-right">
+                <span class="flex items-center justify-end gap-1">
+                  <input id="tCarry" type="number" value="120" min="1" step="5"
+                         class="num-input w-16 sm:w-20">
+                  <span class="text-[11px] text-slate-400">с</span>
+                </span>
+              </td>
+              <td id="bagsCarry" class="td hidden text-right text-slate-400 sm:table-cell">—</td>
+              <td id="totCarry" class="td text-right font-medium">—</td>
             </tr>
             <tr>
-              <td>Укладання одного мішка<small>на піддони, до 1,5 м</small></td>
-              <td><div class="unit sm"><input type="number" id="tStack" value="60" min="1" step="1"><span>с</span></div></td>
-              <td class="dim" id="bagsStack">—</td>
-              <td id="totStack">—</td>
+              <td class="td pr-2 text-left">
+                <div class="leading-tight">Укладання одного мішка</div>
+                <div class="text-[11px] text-slate-400">на піддони, до 1,5 м</div>
+              </td>
+              <td class="td pl-2 text-right">
+                <span class="flex items-center justify-end gap-1">
+                  <input id="tStack" type="number" value="60" min="1" step="1"
+                         class="num-input w-16 sm:w-20">
+                  <span class="text-[11px] text-slate-400">с</span>
+                </span>
+              </td>
+              <td id="bagsStack" class="td hidden text-right text-slate-400 sm:table-cell">—</td>
+              <td id="totStack" class="td text-right font-medium">—</td>
             </tr>
-            <tr class="total">
-              <td>Разом</td>
-              <td class="dim" id="totPerBag">—</td>
-              <td class="dim" id="bagsAll">—</td>
-              <td id="totAll">—</td>
+            <tr class="row-total">
+              <td class="text-left">Разом</td>
+              <td id="totPerBag" class="text-right text-slate-400">—</td>
+              <td id="bagsAll" class="hidden text-right text-slate-400 sm:table-cell">—</td>
+              <td id="totAll" class="text-right">—</td>
             </tr>
           </tbody>
         </table>
-      </div>
+        </div>
+      </section>
 
-      <div class="card">
-        <h2>Тариф</h2>
-        <div class="grid">
-          <div class="field full">
-            <label for="tariff">Вартість години праці</label>
-            <div class="unit"><input type="number" id="tariff" value="450" min="0" step="10"><span>грн/год</span></div>
-            <div class="sublabel">Київ, 2026: бюджетний сервіс 350, стандартний 450, преміум 500+</div>
-          </div>
+      <section class="card">
+        <h2 class="card-title">Тариф</h2>
+        <label class="block">
+          <span class="mb-1 block text-xs text-slate-500">Вартість години праці</span>
+          <span class="flex items-center gap-2">
+            <input id="tariff" type="number" value="450" min="0" step="10"
+                   class="num-input-lg">
+            <span class="shrink-0 text-xs text-slate-400">грн/год</span>
+          </span>
+        </label>
+        <p class="mt-1.5 text-[11px] text-slate-400">
+          Київ, 2026: бюджетний сервіс 350, стандартний 450, преміум 500+
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="btnPrint" type="button"
+                  class="rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white transition hover:brightness-110">
+            Друк / PDF
+          </button>
+          <button id="btnReset" type="button"
+                  class="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            Скинути
+          </button>
         </div>
-        <div class="actions" style="margin-top:14px">
-          <button class="primary" id="btnPrint">Друк / PDF</button>
-          <button id="btnReset">Скинути</button>
-        </div>
-      </div>
+      </section>
 
     </div>
 
     <!-- ─────────── РЕЗУЛЬТАТ ─────────── -->
-    <div>
+    <div class="min-w-0 space-y-4">
 
-      <div class="card">
-        <h2>Розцінки за один мішок</h2>
-        <table>
+      <section class="card">
+        <h2 class="card-title">Розцінки за один мішок</h2>
+        <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
           <thead>
             <tr>
-              <th>Операція</th>
-              <th>Час</th>
-              <th>Грн/мішок</th>
-              <th>Грн за партію</th>
+              <th class="th text-left">Операція</th>
+              <th class="th text-right">Час</th>
+              <th class="th text-right">
+                <span class="sm:hidden">Грн/міш</span>
+                <span class="hidden sm:inline">Грн/мішок</span>
+              </th>
+              <th class="th text-right">
+                <span class="sm:hidden">Партія</span>
+                <span class="hidden sm:inline">За партію</span>
+              </th>
             </tr>
           </thead>
           <tbody id="opsBody"></tbody>
         </table>
-      </div>
+        </div>
+      </section>
 
-      <div class="card">
-        <h2>Підсумок по партії</h2>
+      <section class="card">
+        <h2 class="card-title">Підсумок по партії</h2>
         <div id="flagBox"></div>
-        <div class="summary">
-          <div class="stat accent">
-            <div class="k">Вартість робіт за партію</div>
-            <div class="v" id="sumCost">—</div>
+        <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+          <div class="stat border-accent/25 bg-accent-soft">
+            <div class="stat-k text-accent-ink">Вартість робіт за партію</div>
+            <div class="stat-v text-accent" id="sumCost">—</div>
           </div>
           <div class="stat">
-            <div class="k">Час робіт</div>
-            <div class="v" id="sumHours">—</div>
+            <div class="stat-k">Час робіт</div>
+            <div class="stat-v" id="sumHours">—</div>
           </div>
           <div class="stat">
-            <div class="k">За одну тонну</div>
-            <div class="v" id="sumTon">—</div>
+            <div class="stat-k">За одну тонну</div>
+            <div class="stat-v" id="sumTon">—</div>
           </div>
           <div class="stat">
-            <div class="k">За один мішок</div>
-            <div class="v" id="sumBag">—</div>
+            <div class="stat-k">За один мішок</div>
+            <div class="stat-v" id="sumBag">—</div>
           </div>
         </div>
-        <p class="hint">
-          Розцінка = час операції / 3600 × тариф. Норми часу беруться з таблиці
-          вище. Стрейч-плівка, вартість брикету, мішків і піддонів у розрахунок
-          не входять.
+        <p class="mt-4 text-xs leading-relaxed text-slate-500">
+          Розцінка = час операції / 3600 × тариф. Норми часу беруться з таблиці вище.
+          Стрейч-плівка, вартість брикету, мішків і піддонів у розрахунок не входять.
         </p>
-      </div>
+      </section>
 
     </div>
-
   </div>
 </div>
 
-<script>
-(function(){
-  "use strict";
-
-  const $ = id => document.getElementById(id);
-  const FIELDS = ['tonnage','tPack','tCarry','tStack','tariff'];
-  const STORE_KEY = 'bryket-packing-v6';
-
-  const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
-
-  const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
-  const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
-  const int = v => Math.round(v).toLocaleString('uk-UA');
-
-  function fmtTime(sec){
-    const s = Math.round(sec);
-    if (s < 60) return s + ' с';
-    const m = Math.floor(s / 60), r = s % 60;
-    return r ? m + ' хв ' + r + ' с' : m + ' хв';
-  }
-
-  function calc(){
-    const tonnage   = num('tonnage');
-    const bagWeight = BAG_WEIGHT;
-    const bags      = Math.round(tonnage * 1000 / bagWeight);
-
-    const tariff    = num('tariff');
-
-    const ops = [
-      {name:'Фасування мешка',        note:'набрати з купи, зав’язати',  t:num('tPack')},
-      {name:'Переноска на 10 м',      note:'тільки туди, без повернення',     t:num('tCarry')},
-      {name:'Укладання на місце складування', note:'на піддони, до 1,5 м',    t:num('tStack')}
-    ];
-
-    ops.forEach(o => {
-      o.rate  = o.t / 3600 * tariff;
-      o.cost  = bags * o.rate;
-      o.hours = bags * o.t / 3600;
-    });
-
-    const rate   = ops.reduce((s,o) => s + o.rate, 0);
-    const cost   = bags * rate;
-    const hours  = ops.reduce((s,o) => s + o.hours, 0);
-    const perTon = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
-
-    return {tonnage, bagWeight, bags, tariff, ops, rate, cost, hours, perTon};
-  }
-
-  function render(){
-    const r = calc();
-
-    $('bagsOut').textContent = int(r.bags);
-
-    // норми часу: мішків і годин на кожну операцію
-    const HOURS = v => nf(v, 1) + ' год';
-    [['bagsPack','totPack',r.ops[0]],
-     ['bagsCarry','totCarry',r.ops[1]],
-     ['bagsStack','totStack',r.ops[2]]].forEach(([bagsId, totId, o]) => {
-      $(bagsId).textContent = int(r.bags);
-      $(totId).textContent  = HOURS(o.hours);
-    });
-
-    $('totPerBag').textContent = fmtTime(r.ops.reduce((s,o) => s + o.t, 0));
-    $('bagsAll').textContent   = int(r.bags);
-    $('totAll').textContent    = HOURS(r.hours);
-
-    $('opsBody').innerHTML = r.ops.map(o =>
-      '<tr>' +
-        '<td>' + o.name + '<small>' + o.note + '</small></td>' +
-        '<td class="dim">' + fmtTime(o.t) + '</td>' +
-        '<td><span class="hi">' + nf(o.rate,2) + '</span></td>' +
-        '<td class="dim">' + nf(o.cost,0) + '</td>' +
-      '</tr>'
-    ).join('') +
-    '<tr class="total">' +
-      '<td>Разом</td>' +
-      '<td class="dim">' + fmtTime(r.ops.reduce((s,o)=>s+o.t,0)) + '</td>' +
-      '<td>' + nf(r.rate,2) + '</td>' +
-      '<td>' + nf(r.cost,0) + '</td>' +
-    '</tr>';
-
-    $('sumCost').innerHTML  = nf(r.cost,0) + ' <small>грн</small>';
-    $('sumHours').innerHTML = nf(r.hours,1) + ' <small>год</small>';
-    $('sumTon').innerHTML   = nf(r.perTon,0) + ' <small>грн</small>';
-    $('sumBag').innerHTML   = nf(r.rate,2) + ' <small>грн</small>';
-
-    const flags = [];
-    if (r.tariff > 0 && r.tariff < 300){
-      flags.push('<div class="flag warn"><b>Тариф нижчий за ринковий.</b> У Києві 2026 ' +
-        'сервіси беруть 350–450 грн/год, тож за ' + nf(r.tariff,0) +
-        ' грн/год бригаду знайти важко.</div>');
-    }
-    $('flagBox').innerHTML = flags.join('');
-  }
-
-  function save(){
-    const o = {};
-    FIELDS.forEach(id => o[id] = $(id).value);
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(o)); } catch(e){}
-  }
-
-  function load(){
-    let o = null;
-    try { o = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){}
-    if (!o) return;
-    FIELDS.forEach(id => { if (o[id] !== undefined) $(id).value = o[id]; });
-  }
-
-  FIELDS.forEach(id => {
-    $(id).addEventListener('input', () => { render(); save(); });
-    $(id).addEventListener('change', () => { render(); save(); });
-  });
-
-  $('btnPrint').addEventListener('click', () => window.print());
-
-  $('btnReset').addEventListener('click', () => {
-    try { localStorage.removeItem(STORE_KEY); } catch(e){}
-    location.reload();
-  });
-
-  load();
-  render();
-})();
-</script>
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>

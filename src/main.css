@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #2e7d4f;
+  --color-accent-soft: #e8f3ec;
+  --color-accent-ink: #1f5a39;
+
+  /* системні шрифти, без веб-шрифтів */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu,
+               "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5;
+  }
+  .card-title {
+    @apply mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500;
+  }
+  .num-input,
+  .num-input-lg {
+    @apply rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-right
+           text-sm tabular-nums transition
+           focus:border-accent focus:ring-2 focus:ring-accent/25 focus:outline-none;
+  }
+  .num-input-lg {
+    @apply w-full px-3 py-2;
+  }
+  .th {
+    @apply border-b border-slate-200 pb-2 pl-2 text-[10px] font-semibold
+           tracking-wide whitespace-nowrap text-slate-500 uppercase sm:pl-3;
+  }
+  .th:first-child {
+    @apply pl-0;
+  }
+  .td {
+    @apply border-b border-dashed border-slate-200 py-2.5 pl-2 align-middle
+           text-[13px] tabular-nums sm:pl-3 sm:text-sm;
+  }
+  .td:first-child {
+    @apply pl-0;
+  }
+  /* числа не переносяться, тягнеться лише колонка з назвою операції */
+  .td:not(:first-child) {
+    @apply whitespace-nowrap;
+  }
+  .row-total td {
+    @apply pl-2 whitespace-nowrap sm:pl-3;
+  }
+  .row-total td:first-child {
+    @apply pl-0 whitespace-normal;
+  }
+  .row-total td {
+    @apply border-t-2 border-b-0 border-slate-800 pt-3 text-sm font-semibold
+           sm:text-[15px];
+  }
+  .stat {
+    @apply rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2.5
+           sm:px-3.5 sm:py-3;
+  }
+  .stat-k {
+    @apply text-[11px] leading-tight text-slate-500 sm:text-xs;
+  }
+  .stat-v {
+    @apply text-lg font-semibold tracking-tight tabular-nums sm:text-xl;
+  }
+  /* прибирає подвійну лінію перед підсумковим рядком */
+  tbody tr:last-child td,
+  tbody tr:nth-last-child(2) td {
+    @apply border-b-0;
+  }
+}
+
+@media print {
+  .card {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  body {
+    background: #fff;
+  }
+}
