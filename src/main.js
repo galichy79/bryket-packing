@@ -3,7 +3,7 @@ import './main.css';
 const $ = id => document.getElementById(id);
 
 const FIELDS = ['tonnage', 'tPack', 'tCarry', 'tStack', 'tariff'];
-const STORE_KEY = 'bryket-packing-v7';
+const STORE_KEY = 'bryket-packing-v8';
 
 const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
 
