@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор фасування та навантаження брикету</title>
+<style>
+  :root{
+    --bg:#f4f6f4; --card:#fff; --ink:#1c2620; --muted:#6b7a72;
+    --line:#dde4df; --accent:#2e7d4f; --accent-soft:#e8f3ec;
+    --warn:#b26a00; --warn-soft:#fdf3e2; --bad:#b3261e; --bad-soft:#fdeceb;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",sans-serif;
+    padding:24px 16px 64px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+  header.top h1{font-size:22px;margin:0;letter-spacing:-.2px}
+  header.top .sub{color:var(--muted);font-size:13px}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:start}
+  @media (max-width:900px){.cols{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 14px;font-weight:600}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:520px){.grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field.full{grid-column:1/-1}
+  label{font-size:12.5px;color:var(--muted)}
+  input,select{
+    font:inherit;color:inherit;background:#fbfdfb;
+    border:1px solid var(--line);border-radius:7px;padding:8px 10px;width:100%;
+  }
+  input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+  .unit{display:flex;align-items:center;gap:8px}
+  .unit input{flex:1 1 auto;min-width:0}
+  .unit span{flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
+  .result-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .result-row:last-child{border-bottom:0}
+  .result-row .k{color:var(--muted)}
+  .result-row .v{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+  .result-row.big .v{font-size:17px}
+  .result-row.total{border-top:2px solid var(--ink);border-bottom:0;margin-top:6px;padding-top:12px}
+  .result-row.total .v{font-size:20px;color:var(--accent)}
+  .result-row.head .k{font-weight:600;color:var(--ink)}
+  .note{font-size:12.5px;color:var(--muted);margin-top:10px}
+  .flag{border-radius:7px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+  .flag.ok{background:var(--accent-soft);color:var(--accent)}
+  .flag.warn{background:var(--warn-soft);color:var(--warn)}
+  .flag.bad{background:var(--bad-soft);color:var(--bad)}
+  .flag b{font-weight:600}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  button{
+    font:inherit;font-weight:600;cursor:pointer;border-radius:7px;padding:9px 14px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);
+  }
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button:hover{filter:brightness(.97)}
+  .hint{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.55}
+  .hint code{background:#eef2ef;padding:1px 5px;border-radius:4px;font-size:11.5px}
+  @media print{
+    body{background:#fff;padding:0;font-size:12px}
+    .noprint{display:none !important}
+    .card{break-inside:avoid;border-color:#bbb}
+    .cols{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Калькулятор фасування та навантаження брикету</h1>
+    <span class="sub">паливні брикети &middot; мішок &rarr; піддон &rarr; машина</span>
+  </header>
+
+  <div class="cols">
+
+    <!-- ─────────── ПАРАМЕТРИ ─────────── -->
+    <div class="noprint">
+
+      <div class="card">
+        <h2>Брикет</h2>
+        <div class="grid">
+          <div class="field full">
+            <label for="briketType">Тип брикету</label>
+            <select id="briketType">
+              <option value="pinikay">Pini-Kay — 4-гранний з отвором</option>
+              <option value="nestro">Nestro — циліндр з отвором</option>
+              <option value="ruf">Ruf — цеглинка</option>
+              <option value="custom">Інший (задати щільність вручну)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="density">Щільність брикету</label>
+            <div class="unit"><input type="number" id="density" value="1250" min="100" step="10"><span>кг/м³</span></div>
+          </div>
+          <div class="field">
+            <label for="briketPrice">Ціна брикету</label>
+            <div class="unit"><input type="number" id="briketPrice" value="5000" min="0" step="50"><span>грн/т</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Фасування</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="bagWeight">Вага мішка</label>
+            <div class="unit"><input type="number" id="bagWeight" value="15" min="1" step="0.5"><span>кг</span></div>
+          </div>
+          <div class="field">
+            <label for="bagsPerPallet">Мішків на піддоні</label>
+            <div class="unit"><input type="number" id="bagsPerPallet" value="40" min="1" step="1"><span>шт</span></div>
+          </div>
+          <div class="field">
+            <label for="palletType">Тип піддону</label>
+            <select id="palletType">
+              <option value="eur">Європіддон 1200×800</option>
+              <option value="fin">Фінський 1200×1000</option>
+              <option value="half">Половинний 800×600</option>
+              <option value="custom">Інший (задати площу)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="palletArea">Площа піддону</label>
+            <div class="unit"><input type="number" id="palletArea" value="0.96" min="0.1" step="0.01"><span>м²</span></div>
+          </div>
+          <div class="field">
+            <label for="packingFactor">Коеф. заповнення об'єму</label>
+            <input type="number" id="packingFactor" value="0.75" min="0.1" max="1" step="0.01">
+          </div>
+          <div class="field">
+            <label for="bagPrice">Ціна мішка</label>
+            <div class="unit"><input type="number" id="bagPrice" value="4" min="0" step="0.5"><span>грн/шт</span></div>
+          </div>
+          <div class="field">
+            <label for="palletPrice">Ціна піддону</label>
+            <div class="unit"><input type="number" id="palletPrice" value="180" min="0" step="10"><span>грн/шт</span></div>
+          </div>
+          <div class="field">
+            <label for="stretchPrice">Стрейч / обв'язка</label>
+            <div class="unit"><input type="number" id="stretchPrice" value="20" min="0" step="5"><span>грн/піддон</span></div>
+          </div>
+          <div class="field full">
+            <label for="packRate">Швидкість фасування</label>
+            <div class="unit"><input type="number" id="packRate" value="240" min="1" step="10"><span>мішків/год</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Транспорт</h2>
+        <div class="grid">
+          <div class="field full">
+            <label for="truckType">Тип машини</label>
+            <select id="truckType">
+              <option value="tent20">Тентова фура — 20 т / 82 м³</option>
+              <option value="tent22">Тентова фура — 22 т / 92 м³</option>
+              <option value="cont20">Контейнер 20' — 21,8 т / 33 м³</option>
+              <option value="cont40">Контейнер 40' — 26,5 т / 67 м³</option>
+              <option value="manip">Маніпулятор — 5 т / 10 м³</option>
+              <option value="gazelle">Газель — 1,5 т / 9 м³</option>
+              <option value="custom">Інша (задати вручну)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="payload">Вантажопідйомність</label>
+            <div class="unit"><input type="number" id="payload" value="20" min="0.1" step="0.1"><span>т</span></div>
+          </div>
+          <div class="field">
+            <label for="truckVolume">Об'єм кузова</label>
+            <div class="unit"><input type="number" id="truckVolume" value="82" min="1" step="1"><span>м³</span></div>
+          </div>
+          <div class="field">
+            <label for="truckHeight">Висота кузова</label>
+            <div class="unit"><input type="number" id="truckHeight" value="2.7" min="0.5" step="0.05"><span>м</span></div>
+          </div>
+          <div class="field">
+            <label for="palletOverride">Піддонів у машину (вручну)</label>
+            <div class="unit"><input type="number" id="palletOverride" value="0" min="0" step="1"><span>0 = авто</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Навантаження та тариф</h2>
+        <div class="grid">
+          <div class="field full">
+            <label for="loadMethod">Спосіб навантаження</label>
+            <select id="loadMethod">
+              <option value="manual">Вручну мішками</option>
+              <option value="forklift">Навантажувач (піддони)</option>
+              <option value="manip">Маніпулятор (піддони)</option>
+              <option value="conveyor">Конвеєр + палетувальник</option>
+              <option value="custom">Інший (задати вручну)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="loadRate">Продуктивність</label>
+            <input type="number" id="loadRate" value="120" min="1" step="1">
+          </div>
+          <div class="field">
+            <label for="loadUnit">Одиниця продуктивності</label>
+            <select id="loadUnit">
+              <option value="bags">мішків/год</option>
+              <option value="pallets">піддонів/год</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="tariff">Тариф навантаження</label>
+            <div class="unit"><input type="number" id="tariff" value="180" min="0" step="10"><span>грн/год</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Партія</h2>
+        <div class="grid">
+          <div class="field full">
+            <label for="trucks">Кількість машин</label>
+            <div class="unit"><input type="number" id="trucks" value="1" min="0.1" step="0.5"><span>машин</span></div>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:14px">
+          <button class="primary" id="btnPrint">Друк / PDF</button>
+          <button id="btnReset">Скинути</button>
+        </div>
+        <p class="hint">
+          Параметри зберігаються у браузері. Значення за замовчуванням — орієнтовні,
+          підставте свої: щільність і ціну брикету у постачальника, норму фасування — за фактом зміни.
+          <code>Коеф. заповнення</code> враховує порожнечі між мішками на піддоні (0,7–0,8 для мішків).
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ─────────── РЕЗУЛЬТАТ ─────────── -->
+    <div>
+      <div class="card" id="flags"></div>
+
+      <div class="card">
+        <h2>Одна машина</h2>
+        <div id="perTruck"></div>
+      </div>
+
+      <div class="card">
+        <h2>Партія</h2>
+        <div id="batch"></div>
+      </div>
+
+      <div class="card">
+        <h2>Час робіт</h2>
+        <div id="time"></div>
+      </div>
+
+      <div class="card">
+        <h2>Вартість</h2>
+        <div id="cost"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  const BRIKET = {
+    pinikay: 1250,
+    nestro:  1100,
+    ruf:     1000
+  };
+
+  const PALLET = {
+    eur:  0.96,
+    fin:  1.20,
+    half: 0.48
+  };
+
+  const TRUCK = {
+    tent20:  {payload:20,   volume:82, height:2.70},
+    tent22:  {payload:22,   volume:92, height:2.70},
+    cont20:  {payload:21.8, volume:33, height:2.39},
+    cont40:  {payload:26.5, volume:67, height:2.39},
+    manip:   {payload:5,    volume:10, height:2.20},
+    gazelle: {payload:1.5,  volume:9,  height:1.80}
+  };
+
+  const LOAD = {
+    manual:   {rate:120, unit:'bags',    tariff:180},
+    forklift: {rate:25,  unit:'pallets', tariff:500},
+    manip:    {rate:15,  unit:'pallets', tariff:700},
+    conveyor: {rate:40,  unit:'pallets', tariff:250}
+  };
+
+  const FIELDS = [
+    'briketType','density','briketPrice',
+    'bagWeight','bagsPerPallet','palletType','palletArea','packingFactor',
+    'bagPrice','palletPrice','stretchPrice','packRate',
+    'truckType','payload','truckVolume','truckHeight','palletOverride',
+    'loadMethod','loadRate','loadUnit','tariff',
+    'trucks'
+  ];
+
+  const STORE_KEY = 'bryket-packing-v1';
+  let syncGuard = false;
+
+  const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+  const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
+  const int = v => Math.floor(v + 1e-9).toLocaleString('uk-UA');
+
+  function row(k, v, cls){
+    return '<div class="result-row ' + (cls||'') + '"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+  }
+
+  /* ── регламентні значення залежно від типу ── */
+  function applyBriket(){
+    const t = $('briketType').value;
+    if (BRIKET[t] !== undefined){
+      $('density').value = BRIKET[t];
+    }
+    $('density').readOnly = (t !== 'custom');
+    $('density').style.opacity = $('density').readOnly ? .6 : 1;
+  }
+
+  function applyPallet(){
+    const t = $('palletType').value;
+    if (PALLET[t] !== undefined){
+      $('palletArea').value = PALLET[t];
+    }
+    $('palletArea').readOnly = (t !== 'custom');
+    $('palletArea').style.opacity = $('palletArea').readOnly ? .6 : 1;
+  }
+
+  function applyTruck(){
+    const t = $('truckType').value;
+    if (TRUCK[t]){
+      $('payload').value     = TRUCK[t].payload;
+      $('truckVolume').value = TRUCK[t].volume;
+      $('truckHeight').value = TRUCK[t].height;
+      ['payload','truckVolume','truckHeight'].forEach(id => {
+        $(id).readOnly = true; $(id).style.opacity = .6;
+      });
+    } else {
+      ['payload','truckVolume','truckHeight'].forEach(id => {
+        $(id).readOnly = false; $(id).style.opacity = 1;
+      });
+    }
+  }
+
+  function applyLoad(){
+    const t = $('loadMethod').value;
+    if (LOAD[t]){
+      $('loadRate').value = LOAD[t].rate;
+      $('loadUnit').value = LOAD[t].unit;
+      $('tariff').value   = LOAD[t].tariff;
+      ['loadRate','loadUnit','tariff'].forEach(id => {
+        $(id).disabled = true; $(id).style.opacity = .6;
+      });
+    } else {
+      ['loadRate','loadUnit','tariff'].forEach(id => {
+        $(id).disabled = false; $(id).style.opacity = 1;
+      });
+    }
+  }
+
+  /* ── основний розрахунок ── */
+  function calc(){
+    const density   = num('density');          // кг/м³
+    const bagWeight = num('bagWeight');        // кг
+    const bagsPal   = num('bagsPerPallet');    // шт
+    const palletArea= num('palletArea');       // м²
+    const fill      = num('packingFactor');
+    const trucks    = num('trucks');
+
+    const payload   = num('payload') * 1000;   // кг
+    const truckVol  = num('truckVolume');      // м³
+    const truckH    = num('truckHeight');      // м
+
+    const bagPrice   = num('bagPrice');
+    const palletPrice= num('palletPrice');
+    const stretch    = num('stretchPrice');
+    const briketPrice= num('briketPrice');
+    const packRate   = num('packRate');
+    const loadRate   = num('loadRate');
+    const tariff     = num('tariff');
+    const unit       = $('loadUnit').value;
+    const override   = num('palletOverride');
+
+    const PAL_W = 20; // кг, вага самого піддону
+
+    // піддон
+    const palNet   = bagsPal * bagWeight;                 // кг нетто
+    const palGross = palNet + PAL_W;
+    const palVol   = density > 0 && fill > 0 ? (palNet / density) / fill : 0;   // м³ вантажу
+    const palBlock = palVol + palletArea * 0.144;         // м³ разом з піддоном
+    const palHeight= palletArea > 0 ? palVol / palletArea + 0.144 : 0;
+
+    // машина
+    const byMass = palGross > 0 ? Math.floor(payload / palGross) : 0;
+    const byVol  = palBlock > 0 ? Math.floor(truckVol / palBlock) : 0;
+    const auto   = Math.min(byMass, byVol);
+    const palTruck = override > 0 ? Math.floor(override) : auto;
+
+    const bagsTruck = palTruck * bagsPal;
+    const tonsTruck = (palTruck * palNet) / 1000;
+    const volTruck  = palTruck * palBlock;
+
+    const binding = override > 0 ? 'вручну'
+      : (byMass <= byVol ? 'за масою' : 'за об’ємом');
+
+    // партія
+    const totPallets = Math.round(palTruck * trucks);
+    const totBags    = Math.round(bagsTruck * trucks);
+    const totTons    = tonsTruck * trucks;
+
+    // час
+    const hoursPack = packRate > 0 ? totBags / packRate : 0;
+    const hoursLoad = loadRate > 0
+      ? (unit === 'bags' ? totBags / loadRate : totPallets / loadRate)
+      : 0;
+
+    // вартість
+    const cBriket  = totTons * briketPrice;
+    const cBags    = totBags * bagPrice;
+    const cPallets = totPallets * palletPrice;
+    const cStretch = totPallets * stretch;
+    const cLabor   = (hoursPack + hoursLoad) * tariff;
+    const cTotal   = cBriket + cBags + cPallets + cStretch + cLabor;
+
+    return {
+      density, bagWeight, bagsPal, palletArea, fill, trucks,
+      palNet, palGross, palVol, palBlock, palHeight,
+      byMass, byVol, palTruck, bagsTruck, tonsTruck, volTruck, binding,
+      totPallets, totBags, totTons,
+      hoursPack, hoursLoad, unit,
+      cBriket, cBags, cPallets, cStretch, cLabor, cTotal
+    };
+  }
+
+  function render(){
+    const r = calc();
+
+    /* ── прапорці ── */
+    const flags = [];
+    if (r.palletArea > 0 && r.palHeight > num('truckHeight')){
+      flags.push('<div class="flag bad"><b>Не влізе по висоті.</b> Пакет на піддоні — ' +
+        nf(r.palHeight,2) + ' м, а кузов — ' + nf(num('truckHeight'),2) + ' м. ' +
+        'Зменште мішків на піддоні або висоту пакета.</div>');
+    } else if (r.palHeight > 0){
+      flags.push('<div class="flag ok"><b>По висоті проходить.</b> Пакет ' + nf(r.palHeight,2) +
+        ' м проти кузова ' + nf(num('truckHeight'),2) + ' м.</div>');
+    }
+    if (r.palTruck > 0 && r.palGross * r.palTruck > num('payload') * 1000){
+      flags.push('<div class="flag warn"><b>Перевантаження.</b> ' + int(r.palTruck) +
+        ' піддонів важать ' + nf(r.palGross * r.palTruck / 1000, 2) +
+        ' т — це більше вантажопідйомності.</div>');
+    }
+    $('flags').innerHTML = flags.join('') || '<div class="flag ok">Розрахунок виконано.</div>';
+
+    /* ── одна машина ── */
+    $('perTruck').innerHTML =
+      row('Мішків на піддоні', int(r.bagsPal) + ' шт × ' + nf(r.bagWeight,1) + ' кг') +
+      row('Вага піддону (нетто / брутто)', nf(r.palNet,1) + ' / ' + nf(r.palGross,1) + ' кг') +
+      row('Об’єм вантажу на піддоні', nf(r.palVol,3) + ' м³') +
+      row('Висота пакета з піддоном', nf(r.palHeight,2) + ' м') +
+      row('Піддонів у машину', '<b>' + int(r.palTruck) + '</b> <span style="font-weight:400;color:var(--muted)">(' + r.binding + ')</span>', 'big') +
+      row('Мішків у машині', int(r.bagsTruck) + ' шт') +
+      row('Тонн у машині', nf(r.tonsTruck,2) + ' т') +
+      row('Заповнено об’єму кузова', nf(r.volTruck,1) + ' з ' + nf(num('truckVolume'),0) + ' м³') +
+      '<p class="note">Ліміт за масою — ' + int(r.byMass) + ' піддонів, за об’ємом — ' + int(r.byVol) + '.</p>';
+
+    /* ── партія ── */
+    $('batch').innerHTML =
+      row('Машин', nf(r.trucks,1)) +
+      row('Піддонів усього', int(r.totPallets) + ' шт') +
+      row('Мішків усього', int(r.totBags) + ' шт', 'big') +
+      row('Тонн усього', '<b>' + nf(r.totTons,2) + ' т</b>', 'big');
+
+    /* ── час ── */
+    const unitLabel = r.unit === 'bags' ? 'мішків/год' : 'піддонів/год';
+    $('time').innerHTML =
+      row('Фасування (' + nf(num('packRate'),0) + ' мішків/год)', nf(r.hoursPack,2) + ' год') +
+      row('Навантаження (' + nf(num('loadRate'),0) + ' ' + unitLabel + ')', nf(r.hoursLoad,2) + ' год') +
+      row('Разом, якщо послідовно', nf(r.hoursPack + r.hoursLoad,2) + ' год') +
+      row('Разом, якщо паралельно', '<b>' + nf(Math.max(r.hoursPack, r.hoursLoad),2) + ' год</b>', 'big');
+
+    /* ── вартість ── */
+    const perTon = r.totTons > 0 ? r.cTotal / r.totTons : 0;
+    const perBag = r.totBags > 0 ? r.cTotal / r.totBags : 0;
+    $('cost').innerHTML =
+      row('Брикет', nf(r.cBriket,0) + ' грн') +
+      row('Мішки', nf(r.cBags,0) + ' грн') +
+      row('Піддони', nf(r.cPallets,0) + ' грн') +
+      row('Стрейч / обв’язка', nf(r.cStretch,0) + ' грн') +
+      row('Робота (фасування + навантаження)', nf(r.cLabor,0) + ' грн') +
+      row('Разом', nf(r.cTotal,0) + ' грн', 'total') +
+      row('Собівартість 1 т', nf(perTon,0) + ' грн', 'head') +
+      row('Собівартість 1 мішка', nf(perBag,2) + ' грн', 'head');
+  }
+
+  /* ── збереження ── */
+  function save(){
+    const o = {};
+    FIELDS.forEach(id => o[id] = $(id).value);
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(o)); } catch(e){}
+  }
+
+  function load(){
+    let o = null;
+    try { o = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){}
+    if (!o) return;
+    syncGuard = true;
+    FIELDS.forEach(id => { if (o[id] !== undefined) $(id).value = o[id]; });
+    syncGuard = false;
+  }
+
+  /* ── події ── */
+  function syncSelectors(){
+    if (syncGuard) return;
+    applyBriket(); applyPallet(); applyTruck(); applyLoad();
+  }
+
+  function update(){
+    syncSelectors();
+    render();
+    save();
+  }
+
+  FIELDS.forEach(id => {
+    $(id).addEventListener('input', update);
+    $(id).addEventListener('change', update);
+  });
+
+  $('btnPrint').addEventListener('click', () => window.print());
+
+  $('btnReset').addEventListener('click', () => {
+    try { localStorage.removeItem(STORE_KEY); } catch(e){}
+    location.reload();
+  });
+
+  load();
+  syncSelectors();
+  render();
+})();
+</script>
+</body>
+</html>
