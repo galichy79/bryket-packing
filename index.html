@@ -87,22 +87,9 @@
       <div class="card">
         <h2>Брикет</h2>
         <div class="grid">
-          <div class="field full">
-            <label for="briketType">Тип брикету</label>
-            <select id="briketType">
-              <option value="pinikay">Pini-Kay — 4-гранний з отвором, ~12 000 грн/т</option>
-              <option value="nestro">Nestro — циліндр з отвором, ~11 000 грн/т</option>
-              <option value="ruf">Ruf — цеглинка, ~7 000 грн/т</option>
-              <option value="custom">Інший (задати щільність вручну)</option>
-            </select>
-          </div>
           <div class="field">
             <label for="density">Щільність брикету</label>
             <div class="unit"><input type="number" id="density" value="1250" min="100" step="10"><span>кг/м³</span></div>
-          </div>
-          <div class="field">
-            <label for="briketPrice">Ціна брикету</label>
-            <div class="unit"><input type="number" id="briketPrice" value="12000" min="0" step="50"><span>грн/т</span></div>
           </div>
         </div>
       </div>
@@ -134,18 +121,6 @@
           <div class="field">
             <label for="packingFactor">Коеф. заповнення об'єму</label>
             <input type="number" id="packingFactor" value="0.75" min="0.1" max="1" step="0.01">
-          </div>
-          <div class="field">
-            <label for="bagPrice">Ціна мішка</label>
-            <div class="unit"><input type="number" id="bagPrice" value="4" min="0" step="0.5"><span>грн/шт</span></div>
-          </div>
-          <div class="field">
-            <label for="palletPrice">Ціна піддону</label>
-            <div class="unit"><input type="number" id="palletPrice" value="180" min="0" step="10"><span>грн/шт</span></div>
-          </div>
-          <div class="field">
-            <label for="stretchPrice">Стрейч / обв'язка</label>
-            <div class="unit"><input type="number" id="stretchPrice" value="20" min="0" step="5"><span>грн/піддон</span></div>
           </div>
           <div class="field full">
             <label for="packRate">Швидкість фасування</label>
@@ -191,29 +166,12 @@
       <div class="card">
         <h2>Навантаження та тариф</h2>
         <div class="grid">
-          <div class="field full">
-            <label for="loadMethod">Спосіб навантаження</label>
-            <select id="loadMethod">
-              <option value="manual">Вручну мішками</option>
-              <option value="forklift">Навантажувач (піддони)</option>
-              <option value="manip">Маніпулятор (піддони)</option>
-              <option value="conveyor">Конвеєр + палетувальник</option>
-              <option value="custom">Інший (задати вручну)</option>
-            </select>
+          <div class="field">
+            <label for="loadRate">Продуктивність навантаження</label>
+            <div class="unit"><input type="number" id="loadRate" value="40" min="1" step="1"><span>мішків/год</span></div>
           </div>
           <div class="field">
-            <label for="loadRate">Продуктивність</label>
-            <input type="number" id="loadRate" value="40" min="1" step="1">
-          </div>
-          <div class="field">
-            <label for="loadUnit">Одиниця продуктивності</label>
-            <select id="loadUnit">
-              <option value="bags">мішків/год</option>
-              <option value="pallets">піддонів/год</option>
-            </select>
-          </div>
-          <div class="field full">
-            <label for="tariff">Тариф навантаження</label>
+            <label for="tariff">Тариф</label>
             <div class="unit"><input type="number" id="tariff" value="250" min="0" step="10"><span>грн/год</span></div>
           </div>
         </div>
@@ -232,9 +190,12 @@
           <button id="btnReset">Скинути</button>
         </div>
         <p class="hint">
-          Параметри зберігаються у браузері. Типові значення — мішок 30 кг, 33 мішки на
-          європіддон (990 кг), 60 мішків/год на фасуванні, 40 мішків/год на навантаженні
-          вручну за тарифом 250 грн/год (Київ, 2026). Підставте свої за фактом зміни.
+          Рахуються лише роботи: фасування та навантаження (перенесення, укладка на
+          піддон, погрузка в машину). Вартість брикету, мішків, піддонів і стрейчу
+          не враховується.
+          Типові значення — мішок 30 кг, 33 мішки на європіддон (990 кг), 60 мішків/год
+          на фасуванні, 40 мішків/год на навантаженні вручну за тарифом 250 грн/год
+          (Київ, 2026). Підставте свої за фактом зміни.
           <code>Коеф. заповнення</code> враховує порожнечі між мішками на піддоні (0,7–0,8 для мішків).
         </p>
       </div>
@@ -261,7 +222,7 @@
       </div>
 
       <div class="card">
-        <h2>Вартість</h2>
+        <h2>Вартість робіт</h2>
         <div id="cost"></div>
       </div>
     </div>
@@ -274,13 +235,6 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
-
-  // щільність кг/м³ і оптова ціна грн/т, Київ 2026
-  const BRIKET = {
-    pinikay: {density:1250, price:12000},
-    nestro:  {density:1100, price:11000},
-    ruf:     {density:1000, price:7000}
-  };
 
   const PALLET = {
     eur:  0.96,
@@ -297,19 +251,11 @@
     gazelle: {payload:1.5,  volume:9,  height:1.80}
   };
 
-  const LOAD = {
-    manual:   {rate:40,  unit:'bags',    tariff:250},
-    forklift: {rate:25,  unit:'pallets', tariff:500},
-    manip:    {rate:15,  unit:'pallets', tariff:700},
-    conveyor: {rate:40,  unit:'pallets', tariff:250}
-  };
-
   const FIELDS = [
-    'briketType','density','briketPrice',
-    'bagWeight','bagsPerPallet','palletType','palletArea','packingFactor',
-    'bagPrice','palletPrice','stretchPrice','packRate',
+    'density',
+    'bagWeight','bagsPerPallet','palletType','palletArea','packingFactor','packRate',
     'truckType','payload','truckVolume','truckHeight','palletOverride',
-    'loadMethod','loadRate','loadUnit','tariff',
+    'loadRate','tariff',
     'trucks'
   ];
 
@@ -325,16 +271,6 @@
   }
 
   /* ── регламентні значення залежно від типу ── */
-  function applyBriket(){
-    const t = $('briketType').value;
-    if (BRIKET[t]){
-      $('density').value     = BRIKET[t].density;
-      $('briketPrice').value = BRIKET[t].price;
-    }
-    $('density').readOnly = (t !== 'custom');
-    $('density').style.opacity = $('density').readOnly ? .6 : 1;
-  }
-
   function applyPallet(){
     const t = $('palletType').value;
     if (PALLET[t] !== undefined){
@@ -360,22 +296,6 @@
     }
   }
 
-  function applyLoad(){
-    const t = $('loadMethod').value;
-    if (LOAD[t]){
-      $('loadRate').value = LOAD[t].rate;
-      $('loadUnit').value = LOAD[t].unit;
-      $('tariff').value   = LOAD[t].tariff;
-      ['loadRate','loadUnit','tariff'].forEach(id => {
-        $(id).disabled = true; $(id).style.opacity = .6;
-      });
-    } else {
-      ['loadRate','loadUnit','tariff'].forEach(id => {
-        $(id).disabled = false; $(id).style.opacity = 1;
-      });
-    }
-  }
-
   /* ── основний розрахунок ── */
   function calc(){
     const density   = num('density');          // кг/м³
@@ -389,14 +309,9 @@
     const truckVol  = num('truckVolume');      // м³
     const truckH    = num('truckHeight');      // м
 
-    const bagPrice   = num('bagPrice');
-    const palletPrice= num('palletPrice');
-    const stretch    = num('stretchPrice');
-    const briketPrice= num('briketPrice');
     const packRate   = num('packRate');
     const loadRate   = num('loadRate');
     const tariff     = num('tariff');
-    const unit       = $('loadUnit').value;
     const override   = num('palletOverride');
 
     const PAL_W = 20; // кг, вага самого піддону
@@ -428,25 +343,20 @@
 
     // час
     const hoursPack = packRate > 0 ? totBags / packRate : 0;
-    const hoursLoad = loadRate > 0
-      ? (unit === 'bags' ? totBags / loadRate : totPallets / loadRate)
-      : 0;
+    const hoursLoad = loadRate > 0 ? totBags / loadRate : 0;
 
-    // вартість
-    const cBriket  = totTons * briketPrice;
-    const cBags    = totBags * bagPrice;
-    const cPallets = totPallets * palletPrice;
-    const cStretch = totPallets * stretch;
-    const cLabor   = (hoursPack + hoursLoad) * tariff;
-    const cTotal   = cBriket + cBags + cPallets + cStretch + cLabor;
+    // вартість робіт
+    const cPack  = hoursPack * tariff;
+    const cLoad  = hoursLoad * tariff;
+    const cTotal = cPack + cLoad;
 
     return {
       density, bagWeight, bagsPal, palletArea, fill, trucks,
       palNet, palGross, palVol, palBlock, palHeight,
       byMass, byVol, palTruck, bagsTruck, tonsTruck, volTruck, binding,
       totPallets, totBags, totTons,
-      hoursPack, hoursLoad, unit,
-      cBriket, cBags, cPallets, cStretch, cLabor, cTotal
+      hoursPack, hoursLoad,
+      cPack, cLoad, cTotal
     };
   }
 
@@ -490,25 +400,21 @@
       row('Тонн усього', '<b>' + nf(r.totTons,2) + ' т</b>', 'big');
 
     /* ── час ── */
-    const unitLabel = r.unit === 'bags' ? 'мішків/год' : 'піддонів/год';
     $('time').innerHTML =
       row('Фасування (' + nf(num('packRate'),0) + ' мішків/год)', nf(r.hoursPack,2) + ' год') +
-      row('Навантаження (' + nf(num('loadRate'),0) + ' ' + unitLabel + ')', nf(r.hoursLoad,2) + ' год') +
+      row('Навантаження (' + nf(num('loadRate'),0) + ' мішків/год)', nf(r.hoursLoad,2) + ' год') +
       row('Разом, якщо послідовно', nf(r.hoursPack + r.hoursLoad,2) + ' год') +
       row('Разом, якщо паралельно', '<b>' + nf(Math.max(r.hoursPack, r.hoursLoad),2) + ' год</b>', 'big');
 
-    /* ── вартість ── */
+    /* ── вартість робіт ── */
     const perTon = r.totTons > 0 ? r.cTotal / r.totTons : 0;
     const perBag = r.totBags > 0 ? r.cTotal / r.totBags : 0;
     $('cost').innerHTML =
-      row('Брикет', nf(r.cBriket,0) + ' грн') +
-      row('Мішки', nf(r.cBags,0) + ' грн') +
-      row('Піддони', nf(r.cPallets,0) + ' грн') +
-      row('Стрейч / обв’язка', nf(r.cStretch,0) + ' грн') +
-      row('Робота (фасування + навантаження)', nf(r.cLabor,0) + ' грн') +
+      row('Фасування', nf(r.cPack,0) + ' грн') +
+      row('Навантаження (перенесення, укладка, погрузка)', nf(r.cLoad,0) + ' грн') +
       row('Разом', nf(r.cTotal,0) + ' грн', 'total') +
-      row('Собівартість 1 т', nf(perTon,0) + ' грн', 'head') +
-      row('Собівартість 1 мішка', nf(perBag,2) + ' грн', 'head');
+      row('Вартість 1 т', nf(perTon,0) + ' грн', 'head') +
+      row('Вартість 1 мішка', nf(perBag,2) + ' грн', 'head');
   }
 
   /* ── збереження ── */
@@ -530,7 +436,7 @@
   /* ── події ── */
   function syncSelectors(){
     if (syncGuard) return;
-    applyBriket(); applyPallet(); applyTruck(); applyLoad();
+    applyPallet(); applyTruck();
   }
 
   function update(){
