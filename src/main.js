@@ -2,8 +2,9 @@ import './main.css';
 
 const $ = id => document.getElementById(id);
 
-const FIELDS = ['tonnage', 'bagWeight', 'tPack', 'tCarry', 'tStack', 'workers', 'tariff'];
-const STORE_KEY = 'bryket-packing-v11';
+const FIELDS = ['tonnage', 'bagWeight', 'tPack', 'tCarry', 'tStack',
+                'workers', 'shift', 'tariff'];
+const STORE_KEY = 'bryket-packing-v12';
 
 const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
 const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
@@ -21,6 +22,7 @@ function calc(){
   const bagWeight = num('bagWeight');
   const bags      = bagWeight > 0 ? Math.round(tonnage * 1000 / bagWeight) : 0;
   const workers   = Math.max(1, Math.round(num('workers')) || 1);
+  const shift     = Math.max(1, num('shift') || 8);   // годин у зміні
   const tariff    = num('tariff');
 
   const ops = [
@@ -38,11 +40,12 @@ function calc(){
   const rate    = ops.reduce((s,o) => s + o.rate, 0);
   const cost    = bags * rate;
   const hours   = ops.reduce((s,o) => s + o.hours, 0);   // людино-години
-  const elapsed = hours / workers;                        // календарний термін
+  const elapsed = hours / workers;                        // календарний термін, год
+  const days    = elapsed / shift;                        // термін у змінах
   const perTon  = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
 
-  return {tonnage, bagWeight, bags, workers, tariff, ops,
-          rate, cost, hours, elapsed, perTon};
+  return {tonnage, bagWeight, bags, workers, shift, tariff, ops,
+          rate, cost, hours, elapsed, days, perTon};
 }
 
 function render(){
@@ -83,13 +86,15 @@ function render(){
       '<td class="text-right">' + nf(r.cost, 0) + '</td>' +
     '</tr>';
 
-  const u = ' <small class="text-xs font-normal text-slate-400">грн</small>';
-  $('sumCost').innerHTML = nf(r.cost, 0) + u;
-  $('sumTerm').innerHTML = nf(r.elapsed, 1) +
-    ' <small class="text-xs font-normal text-slate-400">год</small>';
-  $('termNote').textContent = nf(r.hours, 1) + ' люд.-год на ' + r.workers + ' ос.';
-  $('sumTon').innerHTML   = nf(r.perTon, 0) + u;
-  $('sumBag').innerHTML   = nf(r.rate, 2) + u;
+  const u  = t => ' <small class="text-xs font-normal text-slate-400">' + t + '</small>';
+  $('sumCost').innerHTML     = nf(r.cost, 0) + u('грн');
+  $('sumManHours').innerHTML = nf(r.hours, 1) + u('люд.-год');
+  $('sumTermH').innerHTML    = nf(r.elapsed, 1) + u('год');
+  $('sumTermD').innerHTML    = nf(r.days, 1) + u('днів');
+  $('termNote').textContent  = 'зміна ' + nf(r.shift, r.shift % 1 ? 1 : 0) +
+                               ' год, ' + r.workers + ' ос.';
+  $('sumTon').innerHTML      = nf(r.perTon, 0) + u('грн');
+  $('sumBag').innerHTML      = nf(r.rate, 2) + u('грн');
 
   const flags = [];
   if (r.tariff > 0 && r.tariff < 300){
