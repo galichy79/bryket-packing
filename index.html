@@ -42,6 +42,8 @@
     background:#f2f5f3;border:1px solid var(--line);border-radius:7px;
     padding:8px 10px;font-variant-numeric:tabular-nums;color:var(--muted);
   }
+  .unit.sm input{padding:6px 8px;font-size:13.5px}
+  .unit.sm span{font-size:11px}
   .unit{display:flex;align-items:center;gap:8px}
   .unit input{flex:1 1 auto;min-width:0}
   .unit span{flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
@@ -66,6 +68,12 @@
   tr.total td{border-top:2px solid var(--ink);border-bottom:0;padding-top:12px;font-weight:600;font-size:15px}
   .hi{font-weight:600}
   .dim{color:var(--muted)}
+  table.norms td{padding:7px 0;font-size:13.5px;white-space:nowrap}
+  table.norms td:first-child{white-space:normal}
+  table.norms td:nth-child(2){width:84px}
+  table.norms td:nth-child(3){width:54px}
+  table.norms td:nth-child(4){width:74px}
+  table.norms tr.total td{padding-top:11px;font-size:14px}
 
   .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
   @media (max-width:460px){.summary{grid-template-columns:1fr}}
@@ -128,28 +136,47 @@
       </div>
 
       <div class="card">
-        <h2>Норми часу на один мішок</h2>
-        <div class="grid">
-          <div class="field full">
-            <label for="tPack">Фасування — набрати з купи, зав'язати</label>
-            <div class="unit"><input type="number" id="tPack" value="360" min="1" step="5"><span>с</span></div>
-            <div class="sublabel" id="tPackHint"></div>
-          </div>
-          <div class="field full">
-            <label for="tCarry">Переноска на 10 м — тільки туди</label>
-            <div class="unit"><input type="number" id="tCarry" value="60" min="1" step="1"><span>с</span></div>
-            <div class="sublabel" id="tCarryHint"></div>
-          </div>
-          <div class="field full">
-            <label for="tStack">Укладання на місце складування</label>
-            <div class="unit"><input type="number" id="tStack" value="60" min="1" step="1"><span>с</span></div>
-            <div class="sublabel">на піддони, висота до 1,5 м<span id="tStackHint"></span></div>
-          </div>
-          <div class="field full">
-            <label for="spread">Розкид норм</label>
-            <div class="unit"><input type="number" id="spread" value="20" min="0" max="60" step="1"><span>%</span></div>
-            <div class="sublabel">наскільки швидше або повільніше за норму; дає межі розцінки</div>
-          </div>
+        <h2>Норми часу</h2>
+        <table class="norms">
+          <thead>
+            <tr>
+              <th>Операція</th>
+              <th>На мішок</th>
+              <th>Мішків</th>
+              <th>Загалом</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Фасування<small>набрати з купи, зав'язати</small></td>
+              <td><div class="unit sm"><input type="number" id="tPack" value="360" min="1" step="5"><span>с</span></div></td>
+              <td class="dim" id="bagsPack">—</td>
+              <td id="totPack">—</td>
+            </tr>
+            <tr>
+              <td>Переноска<small>на 10 м, тільки туди</small></td>
+              <td><div class="unit sm"><input type="number" id="tCarry" value="60" min="1" step="1"><span>с</span></div></td>
+              <td class="dim" id="bagsCarry">—</td>
+              <td id="totCarry">—</td>
+            </tr>
+            <tr>
+              <td>Укладання<small>на піддони, до 1,5 м</small></td>
+              <td><div class="unit sm"><input type="number" id="tStack" value="60" min="1" step="1"><span>с</span></div></td>
+              <td class="dim" id="bagsStack">—</td>
+              <td id="totStack">—</td>
+            </tr>
+            <tr class="total">
+              <td>Разом</td>
+              <td class="dim" id="totPerBag">—</td>
+              <td class="dim" id="bagsAll">—</td>
+              <td id="totAll">—</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="field" style="margin-top:16px">
+          <label for="spread">Розкид норм</label>
+          <div class="unit"><input type="number" id="spread" value="20" min="0" max="60" step="1"><span>%</span></div>
+          <div class="sublabel">наскільки швидше або повільніше за норму; дає межі розцінки</div>
         </div>
       </div>
 
@@ -211,8 +238,8 @@
         </div>
         <p class="hint">
           Розцінка = час операції / 3600 × тариф. Межі дає <code>розкид норм</code>.
-          Стрейч-плівка, вартість брикету, мішків і піддонів у розрахунок не входять.
-          Норми часу — орієнтовні, підставте свої за фактом зміни.
+          Норми часу беруться з таблиці вище. Стрейч-плівка, вартість брикету,
+          мішків і піддонів у розрахунок не входять.
         </p>
       </div>
 
@@ -289,11 +316,18 @@
 
     $('bagsOut').textContent = int(r.bags);
 
-    // підказка з перерахунком у хвилини, коли норма більша за хвилину
-    [['tPack','tPackHint'],['tCarry','tCarryHint'],['tStack','tStackHint']].forEach(pair => {
-      const v = num(pair[0]);
-      $(pair[1]).textContent = v >= 60 ? ' = ' + fmtTime(v) : '';
+    // норми часу: мішків і годин на кожну операцію
+    const HOURS = v => nf(v, 1) + ' год';
+    [['bagsPack','totPack',r.ops[0]],
+     ['bagsCarry','totCarry',r.ops[1]],
+     ['bagsStack','totStack',r.ops[2]]].forEach(([bagsId, totId, o]) => {
+      $(bagsId).textContent = int(r.bags);
+      $(totId).textContent  = HOURS(o.hours);
     });
+
+    $('totPerBag').textContent = fmtTime(r.ops.reduce((s,o) => s + o.t, 0));
+    $('bagsAll').textContent   = int(r.bags);
+    $('totAll').textContent    = HOURS(r.hours);
 
     $('opsBody').innerHTML = r.ops.map(o =>
       '<tr>' +
