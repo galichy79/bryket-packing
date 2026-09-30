@@ -173,11 +173,6 @@
             </tr>
           </tbody>
         </table>
-        <div class="field" style="margin-top:16px">
-          <label for="spread">Розкид норм</label>
-          <div class="unit"><input type="number" id="spread" value="20" min="0" max="60" step="1"><span>%</span></div>
-          <div class="sublabel">наскільки швидше або повільніше за норму; дає межі розцінки</div>
-        </div>
       </div>
 
       <div class="card">
@@ -237,9 +232,9 @@
           </div>
         </div>
         <p class="hint">
-          Розцінка = час операції / 3600 × тариф. Межі дає <code>розкид норм</code>.
-          Норми часу беруться з таблиці вище. Стрейч-плівка, вартість брикету,
-          мішків і піддонів у розрахунок не входять.
+          Розцінка = час операції / 3600 × тариф. Норми часу беруться з таблиці
+          вище. Стрейч-плівка, вартість брикету, мішків і піддонів у розрахунок
+          не входять.
         </p>
       </div>
 
@@ -253,8 +248,8 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
-  const FIELDS = ['tonnage','tPack','tCarry','tStack','spread','tariff'];
-  const STORE_KEY = 'bryket-packing-v5';
+  const FIELDS = ['tonnage','tPack','tCarry','tStack','tariff'];
+  const STORE_KEY = 'bryket-packing-v6';
 
   const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
 
@@ -274,7 +269,6 @@
     const bagWeight = BAG_WEIGHT;
     const bags      = Math.round(tonnage * 1000 / bagWeight);
 
-    const spread    = num('spread') / 100;
     const tariff    = num('tariff');
 
     const ops = [
@@ -284,31 +278,17 @@
     ];
 
     ops.forEach(o => {
-      o.rate   = o.t / 3600 * tariff;
-      o.rateLo = o.rate * (1 - spread);
-      o.rateHi = o.rate * (1 + spread);
-      o.costLo = bags * o.rateLo;
-      o.costHi = bags * o.rateHi;
-      o.hours  = bags * o.t / 3600;
+      o.rate  = o.t / 3600 * tariff;
+      o.cost  = bags * o.rate;
+      o.hours = bags * o.t / 3600;
     });
 
-    const rate    = ops.reduce((s,o) => s + o.rate,   0);
-    const rateLo  = ops.reduce((s,o) => s + o.rateLo, 0);
-    const rateHi  = ops.reduce((s,o) => s + o.rateHi, 0);
-    const cost    = bags * rate;
-    const costLo  = bags * rateLo;
-    const costHi  = bags * rateHi;
-    const hours   = ops.reduce((s,o) => s + o.hours, 0);
-    const hoursLo = hours * (1 - spread);
-    const hoursHi = hours * (1 + spread);
+    const rate   = ops.reduce((s,o) => s + o.rate, 0);
+    const cost   = bags * rate;
+    const hours  = ops.reduce((s,o) => s + o.hours, 0);
+    const perTon = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
 
-    const perTon  = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
-    const perTonLo= bagWeight > 0 ? rateLo / (bagWeight / 1000) : 0;
-    const perTonHi= bagWeight > 0 ? rateHi / (bagWeight / 1000) : 0;
-
-    return {tonnage, bagWeight, bags, tariff, spread, ops,
-            rate, rateLo, rateHi, cost, costLo, costHi,
-            hours, hoursLo, hoursHi, perTon, perTonLo, perTonHi};
+    return {tonnage, bagWeight, bags, tariff, ops, rate, cost, hours, perTon};
   }
 
   function render(){
@@ -333,21 +313,21 @@
       '<tr>' +
         '<td>' + o.name + '<small>' + o.note + '</small></td>' +
         '<td class="dim">' + fmtTime(o.t) + '</td>' +
-        '<td><span class="hi">' + nf(o.rateLo,2) + '–' + nf(o.rateHi,2) + '</span></td>' +
-        '<td class="dim">' + nf(o.costLo,0) + '–' + nf(o.costHi,0) + '</td>' +
+        '<td><span class="hi">' + nf(o.rate,2) + '</span></td>' +
+        '<td class="dim">' + nf(o.cost,0) + '</td>' +
       '</tr>'
     ).join('') +
     '<tr class="total">' +
       '<td>Разом</td>' +
       '<td class="dim">' + fmtTime(r.ops.reduce((s,o)=>s+o.t,0)) + '</td>' +
-      '<td>' + nf(r.rateLo,2) + '–' + nf(r.rateHi,2) + '</td>' +
-      '<td>' + nf(r.costLo,0) + '–' + nf(r.costHi,0) + '</td>' +
+      '<td>' + nf(r.rate,2) + '</td>' +
+      '<td>' + nf(r.cost,0) + '</td>' +
     '</tr>';
 
-    $('sumCost').innerHTML  = nf(r.costLo,0) + '–' + nf(r.costHi,0) + ' <small>грн</small>';
-    $('sumHours').innerHTML = nf(r.hoursLo,1) + '–' + nf(r.hoursHi,1) + ' <small>год</small>';
-    $('sumTon').innerHTML   = nf(r.perTonLo,0) + '–' + nf(r.perTonHi,0) + ' <small>грн</small>';
-    $('sumBag').innerHTML   = nf(r.rateLo,2) + '–' + nf(r.rateHi,2) + ' <small>грн</small>';
+    $('sumCost').innerHTML  = nf(r.cost,0) + ' <small>грн</small>';
+    $('sumHours').innerHTML = nf(r.hours,1) + ' <small>год</small>';
+    $('sumTon').innerHTML   = nf(r.perTon,0) + ' <small>грн</small>';
+    $('sumBag').innerHTML   = nf(r.rate,2) + ' <small>грн</small>';
 
     const flags = [];
     if (r.tariff > 0 && r.tariff < 300){
