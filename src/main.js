@@ -2,8 +2,8 @@ import './main.css';
 
 const $ = id => document.getElementById(id);
 
-const FIELDS = ['tonnage', 'bagWeight', 'tPack', 'tCarry', 'tStack', 'tariff'];
-const STORE_KEY = 'bryket-packing-v10';
+const FIELDS = ['tonnage', 'bagWeight', 'tPack', 'tCarry', 'tStack', 'workers', 'tariff'];
+const STORE_KEY = 'bryket-packing-v11';
 
 const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
 const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
@@ -20,6 +20,7 @@ function calc(){
   const tonnage   = num('tonnage');
   const bagWeight = num('bagWeight');
   const bags      = bagWeight > 0 ? Math.round(tonnage * 1000 / bagWeight) : 0;
+  const workers   = Math.max(1, Math.round(num('workers')) || 1);
   const tariff    = num('tariff');
 
   const ops = [
@@ -34,12 +35,14 @@ function calc(){
     o.hours = bags * o.t / 3600;
   });
 
-  const rate   = ops.reduce((s,o) => s + o.rate, 0);
-  const cost   = bags * rate;
-  const hours  = ops.reduce((s,o) => s + o.hours, 0);
-  const perTon = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
+  const rate    = ops.reduce((s,o) => s + o.rate, 0);
+  const cost    = bags * rate;
+  const hours   = ops.reduce((s,o) => s + o.hours, 0);   // людино-години
+  const elapsed = hours / workers;                        // календарний термін
+  const perTon  = bagWeight > 0 ? rate / (bagWeight / 1000) : 0;
 
-  return {tonnage, bagWeight, bags, tariff, ops, rate, cost, hours, perTon};
+  return {tonnage, bagWeight, bags, workers, tariff, ops,
+          rate, cost, hours, elapsed, perTon};
 }
 
 function render(){
@@ -81,9 +84,10 @@ function render(){
     '</tr>';
 
   const u = ' <small class="text-xs font-normal text-slate-400">грн</small>';
-  $('sumCost').innerHTML  = nf(r.cost, 0) + u;
-  $('sumHours').innerHTML = nf(r.hours, 1) +
+  $('sumCost').innerHTML = nf(r.cost, 0) + u;
+  $('sumTerm').innerHTML = nf(r.elapsed, 1) +
     ' <small class="text-xs font-normal text-slate-400">год</small>';
+  $('termNote').textContent = nf(r.hours, 1) + ' люд.-год на ' + r.workers + ' ос.';
   $('sumTon').innerHTML   = nf(r.perTon, 0) + u;
   $('sumBag').innerHTML   = nf(r.rate, 2) + u;
 

@@ -118,15 +118,25 @@
       </section>
 
       <section class="card">
-        <h2 class="card-title">Тариф</h2>
-        <label class="block">
-          <span class="mb-1 block text-xs text-slate-500">Вартість години праці</span>
-          <span class="flex items-center gap-2">
-            <input id="tariff" type="number" value="450" min="0" step="10"
-                   class="num-input-lg">
-            <span class="shrink-0 text-xs text-slate-400">грн/год</span>
-          </span>
-        </label>
+        <h2 class="card-title">Робоча сила</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-xs text-slate-500">Кількість робітників</span>
+            <span class="flex items-center gap-2">
+              <input id="workers" type="number" value="1" min="1" step="1"
+                     class="num-input-lg">
+              <span class="shrink-0 text-xs text-slate-400">осіб</span>
+            </span>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs text-slate-500">Вартість години праці</span>
+            <span class="flex items-center gap-2">
+              <input id="tariff" type="number" value="450" min="0" step="10"
+                     class="num-input-lg">
+              <span class="shrink-0 text-xs text-slate-400">грн/год</span>
+            </span>
+          </label>
+        </div>
         <p class="mt-1.5 text-[11px] text-slate-400">
           Київ, 2026: бюджетний сервіс 350, стандартний 450, преміум 500+
         </p>
@@ -179,8 +189,9 @@
             <div class="stat-v text-accent" id="sumCost">—</div>
           </div>
           <div class="stat">
-            <div class="stat-k">Час робіт</div>
-            <div class="stat-v" id="sumHours">—</div>
+            <div class="stat-k">Термін виконання</div>
+            <div class="stat-v" id="sumTerm">—</div>
+            <div class="mt-0.5 text-[11px] leading-tight text-slate-400" id="termNote"></div>
           </div>
           <div class="stat">
             <div class="stat-k">За одну тонну</div>
@@ -193,7 +204,10 @@
         </div>
         <p class="mt-4 text-xs leading-relaxed text-slate-500">
           Розцінка = час операції / 3600 × тариф. Норми часу беруться з таблиці вище.
-          Стрейч-плівка, вартість брикету, мішків і піддонів у розрахунок не входять.
+          Термін виконання — людино-години, поділені на кількість робітників: це оцінка
+          за умови, що всі працюють паралельно й без втрат на узгодження. Вартість робіт
+          від кількості людей не залежить. Стрейч-плівка, вартість брикету, мішків
+          і піддонів у розрахунок не входять.
         </p>
       </section>
 
