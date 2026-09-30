@@ -37,6 +37,11 @@
   }
   input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
   input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+  .fixed{
+    display:flex;align-items:center;justify-content:flex-end;
+    background:#f2f5f3;border:1px solid var(--line);border-radius:7px;
+    padding:8px 10px;font-variant-numeric:tabular-nums;color:var(--muted);
+  }
   .unit{display:flex;align-items:center;gap:8px}
   .unit input{flex:1 1 auto;min-width:0}
   .unit span{flex:0 0 auto;font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
@@ -113,8 +118,8 @@
             <div class="unit"><input type="number" id="tonnage" value="6" min="0.1" step="0.5"><span>т</span></div>
           </div>
           <div class="field">
-            <label for="bagWeight">Вага мішка</label>
-            <div class="unit"><input type="number" id="bagWeight" value="30" min="1" step="1"><span>кг</span></div>
+            <label>Вага мішка</label>
+            <div class="fixed">30 кг</div>
           </div>
           <div class="field full">
             <div class="derived"><span>Мішків у партії</span><strong id="bagsOut">200</strong></div>
@@ -221,8 +226,10 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
-  const FIELDS = ['tonnage','bagWeight','tPack','tCarry','tStack','spread','tariff'];
-  const STORE_KEY = 'bryket-packing-v2';
+  const FIELDS = ['tonnage','tPack','tCarry','tStack','spread','tariff'];
+  const STORE_KEY = 'bryket-packing-v3';
+
+  const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
 
   const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
   const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
@@ -230,8 +237,8 @@
 
   function calc(){
     const tonnage   = num('tonnage');
-    const bagWeight = num('bagWeight');
-    const bags      = bagWeight > 0 ? Math.round(tonnage * 1000 / bagWeight) : 0;
+    const bagWeight = BAG_WEIGHT;
+    const bags      = Math.round(tonnage * 1000 / bagWeight);
 
     const spread    = num('spread') / 100;
     const tariff    = num('tariff');
@@ -300,10 +307,6 @@
       flags.push('<div class="flag warn"><b>Тариф нижчий за ринковий.</b> У Києві 2026 ' +
         'сервіси беруть 350–450 грн/год, тож за ' + nf(r.tariff,0) +
         ' грн/год бригаду знайти важко.</div>');
-    }
-    if (r.bagWeight > 35){
-      flags.push('<div class="flag warn"><b>Мішок понад 35 кг.</b> Постійно піднімати таку вагу ' +
-        'одній людині небезпечно — потрібен другий робітник або механізація.</div>');
     }
     $('flagBox').innerHTML = flags.join('');
   }
