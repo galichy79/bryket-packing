@@ -132,18 +132,18 @@
         <div class="grid">
           <div class="field full">
             <label for="tPack">Фасування — набрати з купи, зав'язати</label>
-            <div class="unit"><input type="number" id="tPack" value="75" min="1" step="1"><span>с</span></div>
-            <div class="sublabel">орієнтовно 60–90 с</div>
+            <div class="unit"><input type="number" id="tPack" value="360" min="1" step="5"><span>с</span></div>
+            <div class="sublabel" id="tPackHint"></div>
           </div>
           <div class="field full">
-            <label for="tCarry">Переноска на 10 м — туди й назад</label>
-            <div class="unit"><input type="number" id="tCarry" value="30" min="1" step="1"><span>с</span></div>
-            <div class="sublabel">орієнтовно 25–35 с</div>
+            <label for="tCarry">Переноска на 10 м — тільки туди</label>
+            <div class="unit"><input type="number" id="tCarry" value="60" min="1" step="1"><span>с</span></div>
+            <div class="sublabel" id="tCarryHint"></div>
           </div>
           <div class="field full">
             <label for="tStack">Укладання на місце складування</label>
-            <div class="unit"><input type="number" id="tStack" value="18" min="1" step="1"><span>с</span></div>
-            <div class="sublabel">на піддони, висота до 1,5 м · орієнтовно 14–22 с</div>
+            <div class="unit"><input type="number" id="tStack" value="60" min="1" step="1"><span>с</span></div>
+            <div class="sublabel">на піддони, висота до 1,5 м<span id="tStackHint"></span></div>
           </div>
           <div class="field full">
             <label for="spread">Розкид норм</label>
@@ -227,13 +227,20 @@
 
   const $ = id => document.getElementById(id);
   const FIELDS = ['tonnage','tPack','tCarry','tStack','spread','tariff'];
-  const STORE_KEY = 'bryket-packing-v3';
+  const STORE_KEY = 'bryket-packing-v4';
 
   const BAG_WEIGHT = 30;   // кг, фіксована вага мішка
 
   const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
   const nf  = (v, d) => v.toLocaleString('uk-UA', {minimumFractionDigits:d, maximumFractionDigits:d});
   const int = v => Math.round(v).toLocaleString('uk-UA');
+
+  function fmtTime(sec){
+    const s = Math.round(sec);
+    if (s < 60) return s + ' с';
+    const m = Math.floor(s / 60), r = s % 60;
+    return r ? m + ' хв ' + r + ' с' : m + ' хв';
+  }
 
   function calc(){
     const tonnage   = num('tonnage');
@@ -245,7 +252,7 @@
 
     const ops = [
       {name:'Фасування мешка',        note:'набрати з купи, зав’язати',  t:num('tPack')},
-      {name:'Переноска на 10 м',      note:'туди й назад',                    t:num('tCarry')},
+      {name:'Переноска на 10 м',      note:'тільки туди, без повернення',     t:num('tCarry')},
       {name:'Укладання на місце складування', note:'на піддони, до 1,5 м',    t:num('tStack')}
     ];
 
@@ -282,17 +289,23 @@
 
     $('bagsOut').textContent = int(r.bags);
 
+    // підказка з перерахунком у хвилини, коли норма більша за хвилину
+    [['tPack','tPackHint'],['tCarry','tCarryHint'],['tStack','tStackHint']].forEach(pair => {
+      const v = num(pair[0]);
+      $(pair[1]).textContent = v >= 60 ? ' = ' + fmtTime(v) : '';
+    });
+
     $('opsBody').innerHTML = r.ops.map(o =>
       '<tr>' +
         '<td>' + o.name + '<small>' + o.note + '</small></td>' +
-        '<td class="dim">' + nf(o.t,0) + ' с</td>' +
+        '<td class="dim">' + fmtTime(o.t) + '</td>' +
         '<td><span class="hi">' + nf(o.rateLo,2) + '–' + nf(o.rateHi,2) + '</span></td>' +
         '<td class="dim">' + nf(o.costLo,0) + '–' + nf(o.costHi,0) + '</td>' +
       '</tr>'
     ).join('') +
     '<tr class="total">' +
       '<td>Разом</td>' +
-      '<td class="dim">' + nf(r.ops.reduce((s,o)=>s+o.t,0),0) + ' с</td>' +
+      '<td class="dim">' + fmtTime(r.ops.reduce((s,o)=>s+o.t,0)) + '</td>' +
       '<td>' + nf(r.rateLo,2) + '–' + nf(r.rateHi,2) + '</td>' +
       '<td>' + nf(r.costLo,0) + '–' + nf(r.costHi,0) + '</td>' +
     '</tr>';
